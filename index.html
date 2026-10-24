@@ -1750,7 +1750,7 @@ const lsGet=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}
 const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
 function buildSave(){
   const s={v:1,n:mazeN,G,grid:Array.from(grid,r=>Array.from(r).join('')),tun:Array.from(tun,r=>Array.from(r).join('')),torches,exitC,P:{x:lie?lie.sx:P.x,z:lie?lie.sz:P.z,y:lie?lie.fy:P.y},heading,camYaw,steps,walked,time:playTime,
-    pitch:field,goals,gates:gates.map(g=>({x:g.x,y:g.y,i:g.i,o:g.o,open:g.open})),keys:keysArr.map(k=>({x:k.x,z:k.z,taken:k.taken,ward:k.ward})),court,houses:houses.map(({L,fm,cut,...r})=>r),npcs:npcs.map(({blk,...r})=>r),baskets,signs,keyCount,visited:[...visited],marks:marks.map(m=>({x:m.x,z:m.z,c:m.c})),ball:ballMode,date:Date.now()};
+    pitch:field,goals,gates:gates.map(g=>({x:g.x,y:g.y,i:g.i,o:g.o,open:g.open})),keys:keysArr.map(k=>({x:k.x,z:k.z,taken:k.taken,ward:k.ward})),court:court&&(({net,...r})=>r)(court),houses:houses.map(({L,fm,cut,...r})=>r),npcs:npcs.map(({blk,...r})=>r),baskets,signs,keyCount,visited:[...visited],marks:marks.map(m=>({x:m.x,z:m.z,c:m.c})),ball:ballMode,date:Date.now()};
   return s}
 function saveGame(){
   if(net||(state!=='play'&&state!=='menu'))return;if(!steps&&!marks.length)return;
