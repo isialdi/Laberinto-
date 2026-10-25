@@ -149,6 +149,16 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
 .netpill{z-index:30;white-space:nowrap;position:absolute;left:50%;top:12px;transform:translateX(-50%);height:34px;padding:0 14px;border-radius:17px;display:flex;align-items:center;background:var(--glass);font-weight:800;font-size:.8rem;box-shadow:var(--shadow),inset 0 0 0 1.5px var(--glass-edge);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);cursor:pointer}
 .gpuerr{position:absolute;inset:0;display:grid;place-items:center;padding:30px;text-align:center;font-weight:800;background:var(--cream)}
 @media (prefers-reduced-motion:reduce){.gbtn,.big{transition:none}}
+.gbtn.gps{background:linear-gradient(160deg,#ffc2dd,#ff6fae);color:#fff}
+.gpsp{z-index:30;position:absolute;left:50%;top:52px;transform:translateX(-50%);height:36px;padding:0 6px 0 14px;border-radius:18px;display:flex;align-items:center;gap:8px;background:var(--glass);font-weight:800;font-size:.8rem;box-shadow:var(--shadow);white-space:nowrap;max-width:92%}
+.gpsp[hidden]{display:none}
+.gpsp button{width:26px;height:26px;border-radius:50%;background:#ff6fae;color:#fff;font-weight:900;font-size:.85rem;display:grid;place-items:center}
+.gpsp svg{width:16px;height:16px;stroke:#ff4f9e}
+#gpsList{display:flex;flex-direction:column;gap:8px}
+#gpsList .lab{margin-top:6px}
+.act.gps.on{background:#ffd3e6}
+.act.stop{background:#ff6fae;color:#fff}
+.talking .gpsp{display:none!important}
 </style>
 
 <div id="app">
@@ -174,6 +184,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="row2">
         <button class="gbtn" id="bView" aria-label="Cambiar de vista"><svg viewBox="0 0 24 24"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="gbtn" id="bCenter" aria-label="Centrar la cámara detrás"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+        <button class="gbtn gps" id="bGps" aria-label="GPS: elegir un sitio"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
         <button class="gbtn" id="bMap" aria-label="Mostrar el mapa" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></button>
       </div>
       <div class="row3">
@@ -183,6 +194,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       </div>
     </div>
     <div class="netpill" id="netPill" hidden></div>
+    <div class="gpsp" id="gpsPill" hidden><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span id="gpsTxt"></span><button id="gpsX" aria-label="Cancelar la ruta">✕</button></div>
     <div class="toast" id="toast"></div>
     <div class="signbox" id="signBox" hidden></div>
     <div class="dlg" id="dlg" hidden><div class="dname" id="dName"></div><div class="dtext" id="dText"></div><div class="dopts" id="dOpts"></div></div>
@@ -218,6 +230,24 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <button class="act" id="mMus"></button>
       <button class="act" id="mNet" hidden>Salir de la sala online</button>
       <button class="act go" id="mBack">Seguir jugando</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="gpsSheet" hidden>
+    <div class="card" role="dialog" aria-label="GPS">
+      <div class="grab"></div>
+      <h2>GPS · ¿A dónde vamos?</h2>
+      <div id="gpsList"></div>
+      <button class="act go" id="gpsBack">Cerrar</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="liftSheet" hidden>
+    <div class="card" role="dialog" aria-label="Ascensor">
+      <div class="grab"></div>
+      <h2>Ascensor</h2>
+      <div id="liftList" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button class="act go" id="liftBack">Cerrar</button>
     </div>
   </div>
 
@@ -265,7 +295,7 @@ renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
 /* ===================== constantes y utilidades ===================== */
 const WH=1.15,HL=.86;            // altura de los muros y del techo de los túneles
 const STEP_LEN=.36;               // distancia de un paso
-const PR=.16;                     // radio del muñeco al chocar
+const PR=.13;                     // radio del muñeco al chocar
 const BR=.17;                     // radio de la bola
 const MARKC=['#f2a3c4','#a3c9f5','#f9d77e','#b9a3f5','#9fe0bf'];
 const SKIN=['#fde3cf','#f3c9a8','#d9a07a','#a8714f','#7a4e35'];
@@ -662,7 +692,7 @@ function setCars(){
   for(const sp of tbs)if(sp.garageCar){const [x,z]=ptW(sp,2.5,5.2);add(x,z,sp.flip?Math.PI:0)}
   for(const x of [35,42,45.5,52.5])add(x,65.6,0);
   add(44,75.7,0);
-  [['#f06292',.9],['#4fc3f7',.84],['#ffd54f',.78]].forEach(([col,sk],k)=>{add(0,0,0);const c=cars[cars.length-1];c.col=col;c.ai=1;c.skill=sk;c.aiOn=0;c.x=[41,47,49.4][k];c.z=75.7;c.h=0});
+  [['#f06292',.97],['#4fc3f7',.92],['#ffd54f',.86]].forEach(([col,sk],k)=>{add(0,0,0);const c=cars[cars.length-1];c.col=col;c.ai=1;c.skill=sk;c.aiOn=0;c.x=[41,47,49.4][k];c.z=75.7;c.h=0});
   for(const c of cars)c.fuel=1;
 }
 
@@ -982,19 +1012,19 @@ function buildCarMesh(c){
   m1.castShadow=true;g.add(m1,m2);
   const wg=new T.CylinderGeometry(.16,.16,.1,14),wmat=new T.MeshStandardMaterial({color:0x2f2f3a,roughness:.8});c.wheels=[];
   for(const [x,z] of [[-.42,.62],[.42,.62],[-.42,-.62],[.42,-.62]]){const w=new T.Mesh(wg,wmat);w.rotation.z=Math.PI/2;w.position.set(x,.16,z);w.castShadow=true;const pv=new T.Group();pv.position.set(x,.16,z);pv.add(w);w.position.set(0,0,0);g.add(pv);c.wheels.push(pv)}
-  g.position.set(c.x,0,c.z);g.rotation.y=c.h;world.add(g);c.mesh=g}
+  g.position.set(c.x,0,c.z);g.rotation.y=c.h;g.scale.set(.8,1,.8);world.add(g);c.mesh=g}
 function buildTownMeshes(){
   const M=townMats();
   for(const sp of tbs)buildTownBuilding(sp,M);
   buildTownProps(M);
   for(const c of cars)buildCarMesh(c);
-  buildSouth(M);buildHuntMesh();pets.dog=petMake('dog');pets.cat=petMake('cat');hsBuildRigs();
+  buildSouth(M);buildGarage(M);buildHuntMesh();pets.dog=petMake('dog');pets.cat=petMake('cat');hsBuildRigs();
 }
 
 /* ---------- coches: conducir, chocar, claxon ---------- */
-const CAR={L:1.4,max:7.4,rev:2.6,acc:4.4,brk:9,fric:1.8,steerMax:.62};
+const CAR={L:1.15,max:6.6,rev:2.4,acc:4.8,brk:9,fric:1.8,steerMax:.8};
 let carPrevDist=2.7,carT=0,mmR=9;
-function carCircles(c){const s=Math.sin(c.h),co=Math.cos(c.h);return [[c.x+s*.62,c.z+co*.62],[c.x,c.z],[c.x-s*.62,c.z-co*.62]]}
+function carCircles(c){const s=Math.sin(c.h),co=Math.cos(c.h);return [[c.x+s*.5,c.z+co*.5],[c.x,c.z],[c.x-s*.5,c.z-co*.5]]}
 function carNear(){let b=null,bd=1.55;for(const c of cars){if(c.occ||(c.ai&&rc.st!=='off'))continue;const d=Math.hypot(P.x-c.x,P.z-c.z);if(d<bd){bd=d;b=c}}return b}
 function rawStick(){let sx=stick.x,sy=stick.y;
   if(state==='play'){if(keys.has('w')||keys.has('arrowup'))sy+=1;if(keys.has('s')||keys.has('arrowdown'))sy-=1;if(keys.has('d')||keys.has('arrowright'))sx+=1;if(keys.has('a')||keys.has('arrowleft'))sx-=1}
@@ -1008,7 +1038,7 @@ function enterCar(c){
 function freeSpot(x,z){
   for(const [dx,dz] of [[.22,0],[-.22,0],[0,.22],[0,-.22]])if(solidAt(x+dx,z+dz))return false;
   for(const c of cars){if(c===drv)continue;for(const [cx,cz] of carCircles(c))if(Math.hypot(x-cx,z-cz)<.62)return false}
-  for(const b of blocks){if(b.r&&b.yb===0&&Math.hypot(x-b.x,z-b.z)<b.r+.2)return false;if(!b.r&&b.yb===0&&b.top>.3&&x>b.x0-.2&&x<b.x1+.2&&z>b.z0-.2&&z<b.z1+.2)return false}
+  const cy=(drv&&drv.y)||0;for(const b of blocks){if(b.r&&b.yb===0&&cy<.3&&Math.hypot(x-b.x,z-b.z)<b.r+.2)return false;if(!b.r&&b.yb<=cy+.5&&b.top>cy+.3&&x>b.x0-.2&&x<b.x1+.2&&z>b.z0-.2&&z<b.z1+.2)return false}
   return true}
 function exitCar(){
   if(!drv)return;if(drv.wash){toast('Espera a que termine el lavado');return}fueling=0;if(rc.st!=='off')raceCancel('Carrera cancelada');const c=drv,s=Math.sin(c.h),co=Math.cos(c.h);
@@ -1022,19 +1052,19 @@ function resetDrive(){if(drv){drv.occ=null;drv.wash=null;drv=null}fueling=0;if(t
 function carCollide(c){
   let hit=0;
   for(let k=0;k<3;k++){
-    const [px,pz]=carCircles(c)[k],R=.52,cx=Math.floor(px),cz=Math.floor(pz);
+    const [px,pz]=carCircles(c)[k],R=.4,cx=Math.floor(px),cz=Math.floor(pz);
     for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const X=cx+dx,Z=cz+dz;if(!solidAt(X+.5,Z+.5))continue;
       const qx=clamp(px,X,X+1),qz=clamp(pz,Z,Z+1);let nx=px-qx,nz=pz-qz;const d=Math.hypot(nx,nz);
       if(d<R){if(d>1e-6){nx/=d;nz/=d}else{nx=1;nz=0}c.x+=nx*(R-d);c.z+=nz*(R-d);hit=Math.max(hit,Math.abs(c.v))}}}
   for(let k=0;k<3;k++){
     const [px,pz]=carCircles(c)[k];
-    for(const b of blocks){if(b.top<.08||b.yb>.5)continue;
-      let qx,qz,rr=.46;if(b.r){qx=b.x;qz=b.z;rr+=b.r}else{qx=clamp(px,b.x0,b.x1);qz=clamp(pz,b.z0,b.z1)}
+    for(const b of blocks){const cy=c.y||0;if(b.top<cy+.08||b.yb>cy+.5)continue;
+      let qx,qz,rr=.35;if(b.r){qx=b.x;qz=b.z;rr+=b.r}else{qx=clamp(px,b.x0,b.x1);qz=clamp(pz,b.z0,b.z1)}
       let nx=px-qx,nz=pz-qz;const d=Math.hypot(nx,nz);
       if(d<rr){if(d>1e-6){nx/=d;nz/=d}else{nx=1;nz=0}c.x+=nx*(rr-d);c.z+=nz*(rr-d);hit=Math.max(hit,Math.abs(c.v))}}}
-  for(const o of cars){if(o===c)continue;const dd=Math.hypot(o.x-c.x,o.z-c.z);if(dd>2.6)continue;
+  for(const o of cars){if(o===c)continue;if(Math.abs((o.y||0)-(c.y||0))>1.4)continue;const dd=Math.hypot(o.x-c.x,o.z-c.z);if(dd>2.6)continue;
     for(const [ax,az] of carCircles(c))for(const [bx,bz] of carCircles(o)){let nx=ax-bx,nz=az-bz;const d=Math.hypot(nx,nz);
-      if(d<1.02){if(d>1e-6){nx/=d;nz/=d}else{nx=1;nz=0}c.x+=nx*(1.02-d)*.5;c.z+=nz*(1.02-d)*.5;hit=Math.max(hit,Math.abs(c.v)*.6)}}}
+      if(d<.82){if(d>1e-6){nx/=d;nz/=d}else{nx=1;nz=0}c.x+=nx*(.82-d)*.5;c.z+=nz*(.82-d)*.5;hit=Math.max(hit,Math.abs(c.v)*.6)}}}
   return hit}
 function driveStep(dt){
   const c=drv;let {sx,sy}=rawStick();let v=c.v;
@@ -1044,10 +1074,10 @@ function driveStep(dt){
   else v-=Math.sign(v)*Math.min(Math.abs(v),CAR.fric*dt);
   v=clamp(v,-CAR.rev,vMax(c));
   if(offTrack(c.x,c.z))v=Math.min(v*(1-dt*.9),3.6);
-  const st=-sx*CAR.steerMax/(1+Math.abs(v)*.12);c.steer+=(st-c.steer)*(1-Math.exp(-dt*9));
+  const st=-sx*CAR.steerMax/(1+Math.abs(v)*.05);c.steer+=(st-c.steer)*(1-Math.exp(-dt*9));
   const n=Math.max(1,Math.ceil(Math.abs(v)*dt/.1));
   for(let i=0;i<n;i++){c.h+=v/CAR.L*Math.tan(c.steer)*dt/n;c.x+=Math.sin(c.h)*v*dt/n;c.z+=Math.cos(c.h)*v*dt/n;
-    const hit=carCollide(c);if(hit>0){if(hit>2.2&&c.bumpT<=0){AU.play('bump');c.bumpT=.4}v*=hit>2.2?.35:.8}}
+    const hit=carCollide(c);if(hit>0){if(hit>2.2&&c.bumpT<=0){AU.play('bump');c.bumpT=.4}v*=hit>2.2?.6:.92}}
   c.v=v;
   if(rc.st!=='go'){c.fuel=Math.max(0,c.fuel-dt*.0042*Math.abs(v)/CAR.max);
     if(c.fuel<.15&&!c.warn1){c.warn1=1;AU.play('ding');toastL('⛽ ¡Poca gasolina! La gasolinera está al sur de la plaza',3500)}
@@ -1055,13 +1085,13 @@ function driveStep(dt){
   if(!c.wash&&rc.st==='off'&&c.z>WASH.zIn-.9&&c.z<WASH.zIn+.5&&Math.abs(c.x-WASH.x)<1.05&&Math.cos(c.h)>.6&&c.v>.5)washStart(c)}
 function seatDriver(c){
   const s=Math.sin(c.h),co=Math.cos(c.h);
-  dollRoot.position.set(c.x+.15*co-.05*s,.04,c.z-.15*s-.05*co);dollRoot.rotation.y=c.h;
+  dollRoot.position.set(c.x+.15*co-.05*s,.04+(c.y||0),c.z-.15*s-.05*co);dollRoot.rotation.y=c.h;
   if(rig){rig.legs[0].rotation.x=rig.legs[1].rotation.x=-1.35;for(const l of rig.legs)l.userData.knee.rotation.x=1.25;
     rig.arms[0].rotation.x=rig.arms[1].rotation.x=-1.05+Math.sin(performance.now()/900)*.01;for(const a of rig.arms)a.userData.elbow.rotation.x=-.5;rig.body.position.y=0;rig.root.visible=true}}
 function updateDrive(dt){
   const c=drv;c.bumpT=Math.max(0,(c.bumpT||0)-dt);
   if(c.wash)washStep(dt,c);else{if(fueling)fuelStep(dt,c);driveStep(dt)}
-  P.x=c.x;P.z=c.z;P.y=0;P.vx=Math.sin(c.h)*c.v;P.vz=Math.cos(c.h)*c.v;heading=c.h;
+  P.x=c.x;P.z=c.z;P.y=c.y||0;P.vx=Math.sin(c.h)*c.v;P.vz=Math.cos(c.h)*c.v;heading=c.h;
   seatDriver(c);AU.engine(clamp(Math.abs(c.v)/CAR.max,0,1));
   followCam(dt,c.h,Math.abs(c.v),c.v>.8);
   if(firstPerson){rig.root.visible=false}}
@@ -1072,7 +1102,7 @@ function carsStep(dt,now){
       else if(c.aiOn){aiStep(c,dt)}
       else if(Math.abs(c.v)>.02){c.v*=Math.exp(-dt*2.6);c.x+=Math.sin(c.h)*c.v*dt;c.z+=Math.cos(c.h)*c.v*dt;carCollide(c)}
       else c.v=0}
-    if(c.mesh){c.mesh.position.set(c.x,0,c.z);c.mesh.rotation.y=c.h;
+    carY(c,dt);if(c.mesh){c.mesh.position.set(c.x,c.y,c.z);c.mesh.rotation.order='YXZ';c.mesh.rotation.y=c.h;c.mesh.rotation.x=c.pit||0;
       if(c.wheels){const sp=(c.v||0)*dt/.16;c.wheels.forEach((w,i)=>{w.rotation.order='YXZ';w.rotation.x+=sp;if(i<2)w.rotation.y=c.steer||0})}}}
   if(drv&&net&&now-carT>100){carT=now;netSend({t:'car',id:net?netId():0,i:drv.id,x:drv.x,z:drv.z,h:drv.h,o:1})}}
 function honk(){AU.play('honk')}
@@ -1122,8 +1152,8 @@ function drawSouthGround(g,px){
   R(28.3,62,31.1,70.5,'#9fc6d6');g.fillStyle='rgba(255,255,255,.55)';for(let i=0;i<18;i++){g.beginPath();g.arc((28.5+Math.random()*2.4)*px,(62.3+Math.random()*8)*px,rnd(.04,.12)*px,0,7);g.fill()}
   R(28,70.4,57,73.6,AS_COL);g.fillStyle='#fff3b0';for(let x=29;x<56;x+=1.6)g.fillRect(x*px,71.96*px,.8*px,.08*px);
   // parque y estanque
-  R(6,62,27,72,'#9bd98f');g.fillStyle='#e6d3b8';g.beginPath();g.arc(14.5*px,66.5*px,3.0*px,0,7);g.fill();g.fillStyle='#8fd3f0';g.beginPath();g.arc(14.5*px,66.5*px,2.6*px,0,7);g.fill();
-  g.fillStyle='rgba(255,255,255,.4)';for(let i=0;i<6;i++){g.beginPath();g.ellipse((13.2+i*.5)*px,(65.6+(i%3)*.7)*px,.3*px,.1*px,0,0,7);g.fill()}
+  R(6,62,27,72,'#9bd98f');R(13.4,62.4,26.8,71.6,'#c4c1cf');R(26.5,69.2,29,72.6,'#c4c1cf');g.fillStyle='#e6d3b8';g.beginPath();g.arc(9.8*px,66.5*px,3.0*px,0,7);g.fill();g.fillStyle='#8fd3f0';g.beginPath();g.arc(9.8*px,66.5*px,2.6*px,0,7);g.fill();
+  g.fillStyle='rgba(255,255,255,.4)';for(let i=0;i<6;i++){g.beginPath();g.ellipse((8.5+i*.5)*px,(65.6+(i%3)*.7)*px,.3*px,.1*px,0,0,7);g.fill()}
   g.fillStyle='#f2e8d8';for(let x=7;x<26;x+=.9)g.fillRect(x*px,61.9*px,.7*px,.1*px);
   R(18,69.5,27,70.2,PAVE);R(11,70.2,12,72,PAVE);
   // circuito: bordillos, asfalto, marcas
@@ -1143,7 +1173,7 @@ function southMM(g,p){
   const R=(x0,y0,x1,y1,c)=>{g.fillStyle=c;g.fillRect(x0*p,y0*p,(x1-x0)*p,(y1-y0)*p)};
   R(0,TN.D,TN.MX+1,TN.D2,'#8ec99b');R(1,TN.D,TN.MX,TN.D2-1,'#a8dca0');
   g.fillStyle='#c4c1cf';R(57,42,61,77,'#c4c1cf');R(8,57,61,61,'#c4c1cf');R(36,53,57,57,'#c4c1cf');R(28,70.4,57,73.6,'#c4c1cf');R(33,62,56,70,'#d2cfdc');R(27.6,61,31.8,62,'#c4c1cf');R(28.3,62,31.1,70.5,'#b7dbe8');R(53,76.5,61,84.5,'#c4c1cf');
-  R(6,62,27,72,'#b5e5ac');g.fillStyle='#8fd3f0';g.beginPath();g.arc(14.5*p,66.5*p,2.6*p,0,7);g.fill();
+  R(6,62,27,72,'#b5e5ac');R(13.4,62.4,26.8,71.6,'#d2cfdc');R(26.5,69.2,29,72.6,'#c4c1cf');g.fillStyle='#8fd3f0';g.beginPath();g.arc(9.8*p,66.5*p,2.6*p,0,7);g.fill();
   g.lineJoin='round';const P=()=>{g.beginPath();for(let i=0;i<=CIR.N;i++){const k=i%CIR.N;i?g.lineTo(CIR.X[k]*p,CIR.Z[k]*p):g.moveTo(CIR.X[k]*p,CIR.Z[k]*p)}g.closePath()};
   g.strokeStyle='#e8453c';g.lineWidth=(2*CIR.hw+.5)*p;P();g.stroke();g.strokeStyle='#8d8aa3';g.lineWidth=2*CIR.hw*p;P();g.stroke();
   R(38.5,53.4,53.5,58.4,'rgba(232,88,63,.55)');R(27.6,62,28.3,70.5,'#58a6c8');R(31.1,62,31.8,70.5,'#58a6c8');R(54.2,53.3,56.6,55.5,'#e8583f')}
@@ -1180,7 +1210,7 @@ function buildSouth(M){
   for(let i=0;i<7;i++){const x=28.45+i*.4;rbox(Gb,x,x+.28,.62,1.25,62.05,62.1,['#ff8fb8','#8fd3ff','#ffe27a','#9fe8b5'][i%4],.01)}
   for(const z of [64.4,66.2,68.0])for(const x of [28.32,31.08]){rbox(Gb,x-.005,x+.005,.7,1.2,z,z+.7,'#d8f4ff',.005)}
   // ----- aparcamiento y parque: bancos -----
-  for(const [x,z,o] of [[21,63.2,'x'],[8.5,68.5,'z'],[20.5,68.4,'x'],[14.5,62.9,'x']]){const L=1.3,w=.4,sx=o==='x'?L:w,sz=o==='x'?w:L;
+  for(const [x,z,o] of [[9.8,62.6,'x'],[11.6,70.9,'x'],[8.0,70.9,'x'],[6.9,63.2,'z']]){const L=1.3,w=.4,sx=o==='x'?L:w,sz=o==='x'?w:L;
     rbox(Cb,x-sx/2,x+sx/2,.28,.33,z-sz/2,z+sz/2,'#c99a62',.01);
     if(o==='x')rbox(Cb,x-L/2,x+L/2,.33,.62,z-.2,z-.17,'#c99a62',.01);else rbox(Cb,x-.2,x-.17,.33,.62,z-L/2,z+L/2,'#c99a62',.01);
     for(const s of [-1,1]){if(o==='x')rbox(Cb,x+s*(L/2-.1)-.03,x+s*(L/2-.1)+.03,0,.28,z-.18,z+.18,'#6d6585',.008);else rbox(Cb,x-.18,x+.18,0,.28,z+s*(L/2-.1)-.03,z+s*(L/2-.1)+.03,'#6d6585',.008)}
@@ -1211,9 +1241,9 @@ function buildSouth(M){
   planeSign('★ GASOLINA GRATIS ★','#fff3b0','#a8624a',1.0,.6,36.76,2.1,55.06,0,40);
   planeSign('KIOSCO','#fbe4c9','#a8624a',1.4,.3,55.4,1.43,53.55,Math.PI,66);
   // ----- estanque -----
-  {const wat=new T.Mesh(new T.CylinderGeometry(2.6,2.6,.04,28),new T.MeshStandardMaterial({color:0x8fd3f0,roughness:.1,metalness:.1,transparent:true,opacity:.85}));wat.position.set(14.5,.05,66.5);world.add(wat);
-    const rim=new T.Mesh(new T.TorusGeometry(2.78,.14,6,32),new T.MeshStandardMaterial({color:0xd8d2e2,roughness:.8}));rim.rotation.x=Math.PI/2;rim.position.set(14.5,.12,66.5);world.add(rim);
-    blkR(14.5,66.5,2.9,.15)}
+  {const wat=new T.Mesh(new T.CylinderGeometry(2.6,2.6,.04,28),new T.MeshStandardMaterial({color:0x8fd3f0,roughness:.1,metalness:.1,transparent:true,opacity:.85}));wat.position.set(9.8,.05,66.5);world.add(wat);
+    const rim=new T.Mesh(new T.TorusGeometry(2.78,.14,6,32),new T.MeshStandardMaterial({color:0xd8d2e2,roughness:.8}));rim.rotation.x=Math.PI/2;rim.position.set(9.8,.12,66.5);world.add(rim);
+    blkR(9.8,66.5,2.9,.15)}
   // mallas
   const mk=(B,mat,sh)=>{const m=new T.Mesh(toGeo(B),mat);m.castShadow=!!sh;m.receiveShadow=true;world.add(m)};
   mk(Wb,M.matW,true);mk(Cb,M.matC,false);mk(Gb,M.matG,false);
@@ -1235,7 +1265,7 @@ function buildSouth(M){
     if(tires.length){const tm=new T.InstancedMesh(new T.CylinderGeometry(.21,.21,.16,12),new T.MeshStandardMaterial({roughness:.8}),tires.length*3),mm=new T.Matrix4(),cc=new T.Color();let k=0;
       tires.forEach(([x,z],i)=>{for(let a=0;a<3;a++){mm.makeTranslation(x,.08+a*.17,z);tm.setMatrixAt(k,mm);cc.set((i+a)%2?'#e8453c':'#f4f1f7');tm.setColorAt(k,cc);k++}blkR(x,z,.24,.5)});
       tm.castShadow=true;tm.frustumCulled=false;world.add(tm)}}
-  {const pts=[],ex=(x,z)=>(x>35&&x<57.5&&z>52.5&&z<71)||(x>26.5&&x<32.5&&z>60&&z<74)||(x>6&&x<57&&z>56.2&&z<61.8)||(x>56.5&&z>41&&z<78)||(x>27&&x<58&&z>70&&z<74)||(x>38&&x<53&&z>73.5&&z<78)||(x>10.5&&x<18.5&&z>62.5&&z<70.5)||(x>34&&x<54&&z>83&&z<89);
+  {const pts=[],ex=(x,z)=>(x>35&&x<57.5&&z>52.5&&z<71)||(x>26.5&&x<32.5&&z>60&&z<74)||(x>6&&x<57&&z>56.2&&z<61.8)||(x>56.5&&z>41&&z<78)||(x>27&&x<58&&z>70&&z<74)||(x>38&&x<53&&z>73.5&&z<78)||(x>6&&x<13.7&&z>62.5&&z<70.5)||(x>34&&x<54&&z>83&&z<89)||(x>12.8&&x<27.8&&z>61.4&&z<72.6);
     let seed=7;const rn=()=>(seed=(seed*16807)%2147483647)/2147483647;
     for(let t=0;t<900&&pts.length<46;t++){const x=2.5+rn()*56.5,z=53.8+rn()*44;if(ex(x,z))continue;if(z>74.4){const [,d]=cirNear(x,z,0,0);if(d<CIR.hw+1.9)continue}
       if(pts.some(p=>Math.hypot(p[0]-x,p[1]-z)<2.4))continue;pts.push([x,z,.45+rn()*.35])}
@@ -1294,7 +1324,7 @@ function raceStart(){
   const put=(c,[s,lat])=>{const q=gridSpot(s,lat);c.x=q.x;c.z=q.z;c.h=q.h;c.v=0;c.steer=0;c.occ=c.occ&&c.occ!=='me'?c.occ:c.occ};
   rc.racers=[];
   put(me,slots[0]);rc.racers.push({c:me,me:1,idx:slots[0][0]?0:0,prog:0,fin:0,ft:0,last:0});
-  ai.forEach((c,k)=>{put(c,slots[k+1]);c.aiOn=0;c.stuck=0;c.skill=[.9,.84,.78][k]||.8;c.lat=[.9,-.9,.0][k]||0;rc.racers.push({c,idx:0,prog:-slots[k+1][0],fin:0,ft:0,last:0})});
+  ai.forEach((c,k)=>{put(c,slots[k+1]);c.aiOn=0;c.stuck=0;c.skill=[.97,.92,.86][k]||.9;c.lat=[.9,-.9,.0][k]||0;rc.racers.push({c,idx:0,prog:-slots[k+1][0],fin:0,ft:0,last:0})});
   rc.racers[0].prog=0;
   for(const r of rc.racers){r.idx=cirNear(r.c.x,r.c.z,0,0)[0];r.last=r.idx}
   heading=me.h;camYaw=me.h;AU.play('count');toast('¡Carrera de 3 vueltas! Prepárate...')}
@@ -1379,7 +1409,7 @@ const HUNT_POOL=[
  {n:'la gasolinera',p:()=>[43.5,56.3,0],c:'Beben sin ser personas, nunca comen y siempre quieren más. Camina entre los surtidores de la gasolinera.'},
  {n:'la salida del lavado',p:()=>[29.7,71.8,0],c:'Entran sucios y salen brillantes, con espuma y cepillos. Donde acaba el túnel del lavado hay algo que también brilla.'},
  {n:'la grada del circuito',p:()=>[44.0,87.7,0],c:'Donde los coches dan vueltas y vueltas y nadie se marea, la gente se sienta a mirar. Busca detrás de la grada, junto a la meta.'},
- {n:'el estanque del parque',p:()=>[18.3,66.5,0],c:'Un charco muy grande donde no vive ningún pez y los bancos hacen de espectadores. Rodea el estanque del parque y mira la orilla este.'},
+ {n:'el estanque del parque',p:()=>[9.8,69.8,0],c:'Un charco muy grande donde no vive ningún pez y los bancos hacen de espectadores. Rodea el estanque del parque y mira la orilla este.'},
  {n:'la estatua',p:()=>[59.0,36.5,0],c:'Un señor dorado que nunca se mueve y siempre tiene visitas de palomas. Camina hasta la estatua de la plaza.'},
  {n:'el callejón del Gato',p:()=>{return [13.5,20.0,0]},c:'No tiene gatos, pero sí nombre de gato: un callejón estrecho que baja de la calle mayor hacia el norte. Camina por su centro.'}];
 const HUNT_FINAL={n:'la rotonda',p:()=>[2.2,28.3,0],c:'La última pista es la más fácil: donde los coches giran en círculo, bajo un árbol que nunca se mueve, está el cofre del Capitán Galleta.'};
@@ -1442,7 +1472,7 @@ function petBlocked(x,z,y){
   if(solidAt(x,z))return true;
   for(const b of blocks){if(b.top<y+.1||(b.yb||0)>y+.28)continue;
     if(b.r){if(Math.hypot(x-b.x,z-b.z)<b.r+.1)return true}else if(x>b.x0-.1&&x<b.x1+.1&&z>b.z0-.1&&z<b.z1+.1)return true}
-  for(const c of cars)for(const [qx,qz] of carCircles(c))if(Math.hypot(x-qx,z-qz)<.55)return true;
+  for(const c of cars)for(const [qx,qz] of carCircles(c))if(Math.hypot(x-qx,z-qz)<.45)return true;
   return false}
 function petFree(x,z,y){return !petBlocked(x,z,y)}
 function petTele(p){
@@ -1564,6 +1594,217 @@ function southStep(dt,now){
   let hd='';if(hs){hd=hs.st==='seek'?'🙈 Escondite '+hs.nf+'/'+hs.list.length+' · '+fmtT(hs.t)+'<small>'+hideHint()+'</small>':hs.st==='done'?'🎉 ¡Todos encontrados!':''}
   set('qHide',hd)}
 
+
+/* ---------- GPS: lista de sitios, línea en el suelo, cancelar, llegada ---------- */
+const GPS={dest:null,field:null,walk:null,world:null,route:[],len:0,t:0,inst:null,beam:null,ring:null,lastNeed:0,open:false};
+const GS=.5;
+function gpsDests(){
+  const L=[],dc=(i)=>{const d=tdoors.find(d=>d.sp===i&&!d.garage)||tdoors.find(d=>d.sp===i);if(!d)return null;const c=d.cells[0];return [c[0]+.5,c[1]+.5]};
+  SHOPS.forEach((s,i)=>{const p=dc(i);if(p)L.push({id:'s'+i,n:s[1].charAt(0)+s[1].slice(1).toLowerCase(),g:'Tiendas',x:p[0],z:p[1]})});
+  for(let i=0;i<8;i++){const p=dc(8+i);if(p)L.push({id:'h'+i,n:'Casa '+(i+1),g:'Casas',x:p[0],z:p[1]})}
+  L.push({id:'pz',n:'Plaza y fuente',g:'Lugares',x:57,z:18},{id:'mz',n:'Entrada del laberinto',g:'Lugares',x:TN.MX-.5,z:TN.MAIN+.5},
+    {id:'gs',n:'Gasolinera',g:'Zona sur',x:46,z:56},{id:'cw',n:'Lavado de coches',g:'Zona sur',x:WASH.x,z:WASH.zIn-.8},{id:'pk',n:'Aparcamiento',g:'Zona sur',x:44,z:66},{id:'pg',n:'Parking de 3 plantas',g:'Zona sur',x:23,z:66.3},
+    {id:'pq',n:'Parque y estanque',g:'Zona sur',x:9.8,z:62.9},{id:'bx',n:'Boxes',g:'Zona sur',x:45,z:75.2},{id:'ci',n:'Circuito (salida)',g:'Zona sur',x:CIR.X[0],z:CIR.Z[0]});
+  return L}
+function gpsWalk(){
+  if(GPS.walk&&GPS.world===world)return GPS.walk;
+  const NX=Math.round(G/GS),W=new Uint8Array(NX*NX),m=.2;
+  for(let j=0;j<NX;j++)for(let i=0;i<NX;i++){const x=(i+.5)*GS,z=(j+.5)*GS;
+    if(solidAt(x,z)||solidAt(x-m,z-m)||solidAt(x+m,z-m)||solidAt(x-m,z+m)||solidAt(x+m,z+m))W[j*NX+i]=1}
+  for(const b of blocks){if(b.top<.12||(b.yb||0)>.3||b.k==='lintel')continue;
+    let x0,x1,z0,z1;if(b.r){x0=b.x-b.r;x1=b.x+b.r;z0=b.z-b.r;z1=b.z+b.r}else{x0=b.x0;x1=b.x1;z0=b.z0;z1=b.z1}
+    x0-=m;x1+=m;z0-=m;z1+=m;
+    for(let j=Math.max(0,Math.floor(z0/GS));j<=Math.min(NX-1,Math.floor(z1/GS));j++)for(let i=Math.max(0,Math.floor(x0/GS));i<=Math.min(NX-1,Math.floor(x1/GS));i++){
+      const x=(i+.5)*GS,z=(j+.5)*GS;if(b.r){if(Math.hypot(x-b.x,z-b.z)<b.r+m)W[j*NX+i]=1}else W[j*NX+i]=1}}
+  GPS.walk={W,NX};GPS.world=world;return GPS.walk}
+function gpsNearFree(Wk,x,z){const {W,NX}=Wk,ci=Math.floor(x/GS),cj=Math.floor(z/GS);
+  for(let r=0;r<8;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;const i=ci+di,j=cj+dj;if(i>=0&&j>=0&&i<NX&&j<NX&&!W[j*NX+i])return j*NX+i}
+  return -1}
+function gpsBuildField(d){
+  const Wk=gpsWalk(),{W,NX}=Wk,F=new Float32Array(NX*NX).fill(1e9),g=gpsNearFree(Wk,d.x,d.z);
+  if(g<0)return null;
+  const q=[g];F[g]=0;let h=0;
+  while(h<q.length){const c=q[h++],ci=c%NX,cj=(c/NX)|0,fc=F[c];
+    for(let k=0;k<8;k++){const di=[1,-1,0,0,1,1,-1,-1][k],dj=[0,0,1,-1,1,-1,1,-1][k],i=ci+di,j=cj+dj;if(i<0||j<0||i>=NX||j>=NX)continue;const n=j*NX+i;if(W[n])continue;
+      if(k>3&&(W[cj*NX+i]||W[j*NX+ci]))continue;
+      const nd=fc+(k>3?1.414:1);if(nd<F[n]){F[n]=nd;q.push(n)}}}
+  return F}
+function gpsLine(Wk,ax,az,bx,bz){const {W,NX}=Wk,n=Math.ceil(Math.hypot(bx-ax,bz-az)/(GS*.5));
+  for(let k=0;k<=n;k++){const t=n?k/n:0,i=Math.floor((ax+(bx-ax)*t)/GS),j=Math.floor((az+(bz-az)*t)/GS);if(i<0||j<0||i>=NX||j>=NX||W[j*NX+i])return false}return true}
+function gpsTrace(){
+  const Wk=gpsWalk(),{NX}=Wk,F=GPS.field;if(!F)return false;
+  let s=gpsNearFree(Wk,P.x,P.z);if(s<0)return false;if(F[s]>=1e8)return false;
+  const pts=[[P.x,P.z]];let c=s,guard=0;
+  while(F[c]>0&&guard++<3000){const ci=c%NX,cj=(c/NX)|0;let best=c,bv=F[c];
+    for(let k=0;k<8;k++){const i=ci+[1,-1,0,0,1,1,-1,-1][k],j=cj+[0,0,1,-1,1,-1,1,-1][k];if(i<0||j<0||i>=NX||j>=NX)continue;const n=j*NX+i;if(F[n]<bv){bv=F[n];best=n}}
+    if(best===c)break;c=best;pts.push([((c%NX)+.5)*GS,(((c/NX)|0)+.5)*GS])}
+  pts.push([GPS.dest.x,GPS.dest.z]);
+  // estirar la cuerda: quitar puntos intermedios con línea libre
+  const out=[pts[0]];let a=0;
+  while(a<pts.length-1){let b=pts.length-1;while(b>a+1&&!gpsLine(Wk,pts[a][0],pts[a][1],pts[b][0],pts[b][1]))b--;out.push(pts[b]);a=b}
+  GPS.route=out;let L=0;for(let i=1;i<out.length;i++)L+=Math.hypot(out[i][0]-out[i-1][0],out[i][1]-out[i-1][1]);GPS.len=L;return true}
+function gpsEnsure(){
+  if(GPS.inst)return;
+  const sh=new T.Shape();sh.moveTo(0,.2);sh.lineTo(.17,-.12);sh.lineTo(0,-.04);sh.lineTo(-.17,-.12);sh.closePath();
+  const gm=new T.ShapeGeometry(sh);gm.rotateX(-Math.PI/2);
+  const mt=new T.MeshBasicMaterial({color:0xff4f9e,transparent:true,opacity:.92,depthWrite:false,fog:false,side:T.DoubleSide});
+  GPS.inst=new T.InstancedMesh(gm,mt,320);GPS.inst.frustumCulled=false;GPS.inst.renderOrder=5;GPS.inst.visible=false;scene.add(GPS.inst);
+  GPS.beam=new T.Mesh(new T.CylinderGeometry(.3,.3,7,16,1,true),new T.MeshBasicMaterial({color:0xff4f9e,transparent:true,opacity:.28,depthWrite:false,fog:false,side:T.DoubleSide}));GPS.beam.visible=false;GPS.beam.renderOrder=5;scene.add(GPS.beam);
+  GPS.ring=new T.Mesh(new T.RingGeometry(.55,.8,32).rotateX(-Math.PI/2),new T.MeshBasicMaterial({color:0xff4f9e,transparent:true,opacity:.85,depthWrite:false,fog:false}));GPS.ring.visible=false;GPS.ring.renderOrder=5;scene.add(GPS.ring)}
+function gpsPillUpd(){const p=$('gpsPill');if(!p)return;if(!GPS.dest){p.hidden=true;return}p.hidden=false;$('gpsTxt').textContent=GPS.dest.n+' · '+Math.max(1,Math.round(GPS.len))+' m'}
+function gpsStart(d){
+  const F=gpsBuildField(d);if(!F){toast('No encuentro camino hasta ahí');return false}
+  GPS.dest=d;GPS.field=F;gpsEnsure();GPS.lastNeed=0;if(!gpsTrace()){GPS.dest=null;GPS.field=null;toast('No encuentro camino hasta ahí');return false}
+  GPS.inst.visible=GPS.beam.visible=GPS.ring.visible=true;gpsPillUpd();toast('Ruta a '+d.n);return true}
+function gpsCancel(msg){
+  GPS.dest=null;GPS.field=null;GPS.route=[];if(GPS.inst){GPS.inst.visible=GPS.beam.visible=GPS.ring.visible=false}gpsPillUpd();if(msg)toast(msg)}
+const _gm=new T.Matrix4(),_gq=new T.Quaternion(),_gs=new T.Vector3(1,1,1),_gp=new T.Vector3(),_ge=new T.Euler();
+function gpsStep(dt,now){
+  if(GPS.world&&GPS.world!==world&&GPS.dest)gpsCancel();
+  if(!GPS.dest||state!=='play')return;
+  const d=GPS.dest;
+  if(Math.hypot(P.x-d.x,P.z-d.z)<1.7){const n=d.n;gpsCancel();toast('¡Has llegado! '+n);try{AU.play('ding')}catch(e){}confX=P.x;confZ=P.z;confettiOn=1.5;return}
+  GPS.lastNeed-=dt;if(GPS.lastNeed<=0){GPS.lastNeed=.4;if(!gpsTrace()){gpsCancel('Ruta perdida');return}gpsPillUpd()}
+  // flechas a lo largo de la ruta, con un destello que avanza
+  const R=GPS.route,sp=1.1,ph=(now*.0009)%1;let n=0,nx=ph*sp;
+  for(let i=1;i<R.length&&n<320;i++){const ax=R[i-1][0],az=R[i-1][1],bx=R[i][0],bz=R[i][1],sl=Math.hypot(bx-ax,bz-az);if(sl<1e-4)continue;
+    const hd=Math.atan2(bx-ax,bz-az);let pos=nx;
+    while(pos<sl&&n<320){const k=pos/sl;_gp.set(ax+(bx-ax)*k,.045,az+(bz-az)*k);_ge.set(0,hd,0);_gq.setFromEuler(_ge);_gm.compose(_gp,_gq,_gs);GPS.inst.setMatrixAt(n++,_gm);pos+=sp}
+    nx=pos-sl}
+  GPS.inst.count=n;GPS.inst.instanceMatrix.needsUpdate=true;
+  const pu=1+.12*Math.sin(now*.006);GPS.beam.position.set(d.x,3.5,d.z);GPS.ring.position.set(d.x,.05,d.z);GPS.ring.scale.set(pu,1,pu)}
+function gpsMM(g){
+  if(!GPS.dest||GPS.route.length<2)return;
+  g.save();g.strokeStyle='#ff4f9e';g.lineWidth=.55;g.lineCap='round';g.lineJoin='round';g.setLineDash([.9,.7]);g.beginPath();
+  GPS.route.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();g.setLineDash([]);
+  g.fillStyle='#ff4f9e';g.beginPath();g.arc(GPS.dest.x,GPS.dest.z,.9,0,7);g.fill();g.restore()}
+function gpsOpen(){
+  const sh=$('gpsSheet'),box=$('gpsList');box.innerHTML='';
+  if(GPS.dest){const b=document.createElement('button');b.className='act stop';b.textContent='✕ Cancelar la ruta a '+GPS.dest.n;b.onclick=()=>{gpsCancel('Ruta cancelada');gpsClose()};box.appendChild(b)}
+  let last='';for(const d of gpsDests()){
+    if(d.g!==last){last=d.g;const l=document.createElement('div');l.className='lab';l.textContent=d.g;box.appendChild(l)}
+    const b=document.createElement('button');b.className='act gps'+(GPS.dest&&GPS.dest.id===d.id?' on':'');b.textContent=d.n;b.onclick=()=>{if(gpsStart(d))gpsClose()};box.appendChild(b)}
+  sh.hidden=false;GPS.open=true}
+function gpsClose(){$('gpsSheet').hidden=true;GPS.open=false}
+/* ---------- parking de tres plantas con ascensor y rampas ---------- */
+const GA={x0:13.4,x1:26.8,z0:62.4,z1:71.6,LV:[0,3,6],H:3,sx0:13.6,sx1:15.6,sz0:69.4,sz1:71.4,dz0:70.0,dz1:70.8,top:9,
+  r1:{xa:18.4,xb:26.4,z0:69.4,z1:71.6},r2:{xa:15.6,xb:23.6,z0:62.4,z1:64.6}};
+const GAR={cab:{y:0,lvl:0,target:0,moving:false,wait:0,v:0},da:[1,0,0],doorM:[],doorB:[],lamps:[],cabG:null,cars:[]};
+const garR1=x=>clamp(3*(GA.r1.xb-x)/(GA.r1.xb-GA.r1.xa),0,3),garR2=x=>clamp(3+3*(x-GA.r2.xa)/(GA.r2.xb-GA.r2.xa),3,6);
+function garSurfLim(x,z,lim){
+  if(x<GA.x0||x>GA.x1||z<GA.z0||z>GA.z1)return -1;
+  if(x>=GA.sx0&&x<=GA.sx1&&z>=GA.sz0&&z<=GA.sz1)return GAR.cab.y<=lim?GAR.cab.y:0;
+  const l1=x>=GA.r1.xa&&z>=GA.r1.z0,l2=x<=GA.r2.xb&&x>=GA.r2.xa&&z<=GA.r2.z1;
+  let h=0;
+  if(!l1&&3<=lim)h=Math.max(h,3);
+  if(!l2&&6<=lim)h=Math.max(h,6);
+  if(l1){const s=garR1(x);if(s<=lim)h=Math.max(h,s)}
+  if(l2){const s=garR2(x);if(s<=lim)h=Math.max(h,s)}
+  return h}
+function garFloor(x,z,yr){return garSurfLim(x,z,yr+.13)}
+function carY(c,dt){
+  if(c.y===undefined){c.y=0;c.pit=0}
+  if(c.x<GA.x0-1||c.x>GA.x1+1||c.z<GA.z0-1||c.z>GA.z1+1){if(c.y===0&&c.pit===0)return}
+  const lim=c.y+.5,s=Math.sin(c.h),co=Math.cos(c.h);
+  let t=garSurfLim(c.x,c.z,lim);if(t<0)t=0;
+  let f=garSurfLim(c.x+s*.7,c.z+co*.7,lim),b=garSurfLim(c.x-s*.7,c.z-co*.7,lim);if(f<0)f=0;if(b<0)b=0;
+  const tp=Math.abs(f-b)>1.1?0:-Math.atan2(f-b,1.4),k=1-Math.exp(-dt*14);
+  c.y+=(t-c.y)*k;if(Math.abs(t-c.y)<.003)c.y=t;c.pit+=(tp-c.pit)*k;if(Math.abs(c.pit)<.002)c.pit=0}
+function buildGarage(M){
+  const Wb=newBuf(),Cb=newBuf(),Tb=newBuf(),LV=GA.LV;
+  const SL='#cfcbdc',CO='#b7b2cc',AC='#f2a3c4',FR='#8b86a8';
+  GAR.doorM=[];GAR.doorB=[];GAR.lamps=[];GAR.cab={y:0,lvl:0,target:0,moving:false,wait:0,v:0};GAR.da=[1,0,0];
+  const prop=(x0,x1,z0,z1,yb,top)=>townProps.push({k:'prop',x0,x1,z0,z1,yb,top,fl:0});
+  const inH=(x,z,H)=>H.some(h=>x>h[0]&&x<h[1]&&z>h[2]&&z<h[3]);
+  const sh=[GA.sx0,GA.sx1,GA.sz0,GA.sz1],L1=[GA.r1.xa,GA.x1,GA.r1.z0,GA.z1],L2=[GA.r2.xa,GA.r2.xb,GA.r2.z0,GA.r2.z1];
+  const slab=(y,H)=>{const xs=[...new Set([GA.x0,GA.x1,...H.flatMap(h=>[h[0],h[1]])])].sort((a,b)=>a-b),zs=[...new Set([GA.z0,GA.z1,...H.flatMap(h=>[h[2],h[3]])])].sort((a,b)=>a-b);
+    for(let i=0;i<xs.length-1;i++)for(let j=0;j<zs.length-1;j++){if(inH((xs[i]+xs[i+1])/2,(zs[j]+zs[j+1])/2,H))continue;rbox(Wb,xs[i],xs[i+1],y-.24,y,zs[j],zs[j+1],SL,.02)}};
+  rbox(Cb,GA.x0,GA.x1,-.02,.015,GA.z0,GA.z1,'#bdbad0',.005);
+  slab(LV[1],[sh,L1]);slab(LV[2],[sh,L2]);
+  // antepechos (con huecos donde están las rampas)
+  const para=(y,ex)=>{const E=[[GA.x0,GA.x1,GA.z0,GA.z0+.15,'x'],[GA.x0,GA.x1,GA.z1-.15,GA.z1,'x'],[GA.x0,GA.x0+.15,GA.z0,GA.z1,'z'],[GA.x1-.15,GA.x1,GA.z0,GA.z1,'z']];
+    for(const [a,b,c,d,o] of E){let segs=o==='x'?[[a,b]]:[[c,d]];
+      for(const e of ex){if(e[0]!==(o==='x'?'x':'z')||Math.abs(e[1]-(o==='x'?c:a))>.2)continue;const out=[];for(const [s0,s1] of segs){if(e[3]<=s0||e[2]>=s1)out.push([s0,s1]);else{if(e[2]>s0)out.push([s0,e[2]]);if(e[3]<s1)out.push([e[3],s1])}}segs=out}
+      for(const [s0,s1] of segs){const [x0,x1,z0,z1]=o==='x'?[s0,s1,c,d]:[a,b,s0,s1];rbox(Wb,x0,x1,y,y+.75,z0,z1,AC,.03);prop(x0,x1,z0,z1,y,y+.75)}}};
+  para(LV[1],[['x',GA.z1,GA.r1.xa,GA.x1],['z',GA.x1,GA.r1.z0,GA.z1]]);
+  para(LV[2],[['x',GA.z0,GA.r2.xa,GA.r2.xb]]);
+  // pilares (hasta la última planta, sin techo)
+  for(const x of [GA.x0+.15,20.1,GA.x1-.15])for(const z of [GA.z0+.15,67,GA.z1-.15]){
+    if(inH(x,z,[[GA.sx0-.3,GA.sx1+.3,GA.sz0-.3,GA.sz1+.3],[L1[0]-.2,L1[1]+.2,L1[2]-.2,L1[3]+.2],[L2[0]-.3,L2[1]+.2,L2[2]-.2,L2[3]+.2]]))continue;
+    rbox(Wb,x-.15,x+.15,0,LV[2],z-.15,z+.15,CO,.03);prop(x-.15,x+.15,z-.15,z+.15,0,LV[2])}
+  // rampas: cuñas sólidas, franjas y barandillas
+  const asph=new T.MeshStandardMaterial({color:0x8d8aa3,roughness:.9}),pinkM=new T.MeshStandardMaterial({color:0xf2a3c4,roughness:.6}),whM=new T.MeshStandardMaterial({color:0xffffff,roughness:.7});
+  const wedge=(pts,za,zb)=>{const s=new T.Shape();s.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)s.lineTo(pts[i][0],pts[i][1]);s.closePath();const g=new T.ExtrudeGeometry(s,{depth:zb-za,bevelEnabled:false});g.translate(0,0,za);const m=new T.Mesh(g,asph);m.castShadow=m.receiveShadow=true;world.add(m)};
+  const ramp=(R,fn,dir)=>{const xa=R.xa,xb=R.xb,za=R.z0+.15,zb=R.z1-.15,ang=Math.atan2(fn(xb)-fn(xa),xb-xa);
+    if(dir<0)wedge([[xb,0],[xa,0],[xa,3]],za,zb);else wedge([[xa,3],[xb,3],[xb,6]],za,zb);
+    for(let x=xa+.5;x<xb;x+=1){const b=new T.Mesh(new T.BoxGeometry(.1,.02,zb-za-.1),whM);b.position.set(x,fn(x)+.012,(za+zb)/2);b.rotation.z=ang;world.add(b)}
+    for(const [c,d] of [[R.z0,R.z0+.15],[R.z1-.15,R.z1]]){
+      const len=Math.hypot(xb-xa,fn(xb)-fn(xa)),bar=new T.Mesh(new T.BoxGeometry(len,.7,.15),pinkM);bar.position.set((xa+xb)/2,(fn(xa)+fn(xb))/2+.35,(c+d)/2);bar.rotation.z=ang;bar.castShadow=true;world.add(bar);
+      for(let x=xa;x<xb-.01;x+=1){const x1=Math.min(xb,x+1),lo=Math.min(fn(x),fn(x1)),hi=Math.max(fn(x),fn(x1));prop(x,x1,c,d,Math.max(0,lo-.25),hi+.7)}}};
+  ramp(GA.r1,garR1,-1);ramp(GA.r2,garR2,1);
+  // cajón del ascensor
+  const t=.12,dz0=GA.dz0,dz1=GA.dz1,top=GA.top;
+  const wl=(a,b,c,d,y0,y1,B,col)=>{rbox(B,a,b,y0,y1,c,d,col,.015)};
+  wl(GA.sx0,GA.sx0+t,GA.sz0,GA.sz1,0,top,Tb,'#cfe7f7');wl(GA.sx0,GA.sx1,GA.sz0,GA.sz0+t,0,top,Tb,'#cfe7f7');wl(GA.sx0,GA.sx1,GA.sz1-t,GA.sz1,0,top,Tb,'#cfe7f7');
+  wl(GA.sx1-t,GA.sx1,GA.sz0,dz0,0,top,Tb,'#cfe7f7');wl(GA.sx1-t,GA.sx1,dz1,GA.sz1,0,top,Tb,'#cfe7f7');
+  for(const [x,z] of [[GA.sx0,GA.sz0],[GA.sx1-.1,GA.sz0],[GA.sx0,GA.sz1-.1],[GA.sx1-.1,GA.sz1-.1]])wl(x,x+.1,z,z+.1,0,top,Wb,FR);
+  wl(GA.sx1-t,GA.sx1,dz0-.05,dz0,0,top,Wb,FR);wl(GA.sx1-t,GA.sx1,dz1,dz1+.05,0,top,Wb,FR);
+  for(let i=0;i<3;i++){const y=LV[i],nx=i<2?LV[i+1]:top;
+    wl(GA.sx1-t,GA.sx1,dz0,dz1,y+2.0,nx,Wb,FR);wl(GA.sx0,GA.sx1,GA.sz0,GA.sz1,nx-.05,nx+.1,Wb,FR)}
+  prop(GA.sx0,GA.sx0+t,GA.sz0,GA.sz1,0,top);prop(GA.sx0,GA.sx1,GA.sz0,GA.sz0+t,0,top);prop(GA.sx0,GA.sx1,GA.sz1-t,GA.sz1,0,top);prop(GA.sx1-t,GA.sx1,GA.sz0,dz0,0,top);prop(GA.sx1-t,GA.sx1,dz1,GA.sz1,0,top);
+  for(let i=0;i<3;i++){const y=LV[i],nx=i<2?LV[i+1]:top;
+    prop(GA.sx1-t,GA.sx1,dz0,dz1,y+1.0,nx);
+    const db={k:'prop',x0:GA.sx1-t,x1:GA.sx1,z0:dz0,z1:dz1,yb:y,top:i===0?-1:y+1.0,fl:0};townProps.push(db);GAR.doorB.push(db)}
+  const mk=(B,mat,s)=>{const m=new T.Mesh(toGeo(B),mat);m.castShadow=!!s;m.receiveShadow=true;world.add(m)};
+  mk(Wb,M.matW,true);mk(Cb,M.matC,false);mk(Tb,M.matT,false);
+  const dm=new T.MeshStandardMaterial({color:0xf2a3c4,roughness:.4,metalness:.3});
+  for(let i=0;i<3;i++){const y=LV[i];
+    const d=new T.Mesh(new T.BoxGeometry(.06,2.0,dz1-dz0),dm);d.position.set(GA.sx1-t/2,y+1.0,(dz0+dz1)/2);world.add(d);GAR.doorM.push(d);
+    const lp=new T.Mesh(new T.BoxGeometry(.05,.16,.16),new T.MeshBasicMaterial({color:0xff5252}));lp.position.set(GA.sx1+.03,y+1.25,dz0-.28);world.add(lp);GAR.lamps.push(lp);
+    const bt=new T.Mesh(new T.BoxGeometry(.06,.3,.2),new T.MeshStandardMaterial({color:0x6d6585,roughness:.5}));bt.position.set(GA.sx1+.03,y+1.0,dz0-.28);world.add(bt)}
+  const cg=new T.Group(),cm=new T.MeshStandardMaterial({color:0xe9e4f5,roughness:.5,metalness:.2}),cx=(GA.sx0+GA.sx1)/2,cz=(GA.sz0+GA.sz1)/2;
+  const fl=new T.Mesh(new T.BoxGeometry(GA.sx1-GA.sx0-2*t,.12,GA.sz1-GA.sz0-2*t),cm);fl.position.set(cx,-.06,cz);cg.add(fl);
+  const ce=new T.Mesh(new T.BoxGeometry(GA.sx1-GA.sx0-2*t,.08,GA.sz1-GA.sz0-2*t),cm);ce.position.set(cx,2.2,cz);cg.add(ce);
+  const lt=new T.Mesh(new T.BoxGeometry(.6,.03,.6),new T.MeshBasicMaterial({color:0xfff6c8}));lt.position.set(cx,2.15,cz);cg.add(lt);
+  const rail=new T.Mesh(new T.BoxGeometry(.04,.04,1.4),new T.MeshStandardMaterial({color:0xb9b4cf,metalness:.6,roughness:.3}));rail.position.set(GA.sx0+t+.06,.85,cz);cg.add(rail);
+  world.add(cg);GAR.cabG=cg;
+  // rótulos
+  planeSign('PARKING','#5f5a8a','#ffffff',4.4,.6,23.5,LV[2]+.38,GA.z1+.02,0,60);
+  planeSign('PARKING','#5f5a8a','#ffffff',4.4,.6,24.5,LV[2]+.38,GA.z0-.02,Math.PI,60);
+  ['P0','P1','P2'].forEach((s,i)=>{planeSign(s,'#f2a3c4','#ffffff',.75,.4,GA.sx1+.04,LV[i]+1.75,(dz0+dz1)/2,Math.PI/2,50)});
+  planeSign('RAMPA ↓ PLANTAS 1 y 2','#ffe9a8','#5f5a8a',2.4,.4,GA.x1+.03,1.4,68,Math.PI/2,34);
+  // coches aparcados (decoración)
+  const cols=['#f06292','#4fc3f7','#ffd54f','#9ccc65','#ba68c8','#ff8a65','#4db6ac','#90a4ae'];
+  const plan=[[[22.6,65.8],[25.2,65.8],[20.2,63.6]],[[21.4,66.4],[23.6,66.4],[25.8,66.4],[24.4,63.6]],[[22.2,66.4],[24.6,66.4],[16.2,67.2],[26,69]]];
+  plan.forEach((lst,i)=>lst.forEach(([x,z],j)=>{const hd=(i+j)%2?0:Math.PI,cc={col:cols[(i*3+j*2)%cols.length],x,z,h:hd};buildCarMesh(cc);cc.mesh.position.y=LV[i];
+    prop(x-.36,x+.36,z-.82,z+.82,LV[i],LV[i]+.95)}))
+}
+function garAction(){
+  if(P.x<GA.x0-1.5||P.x>GA.x1+1.5||P.z<GA.z0-1.5||P.z>GA.z1+1.5)return null;
+  const c=GAR.cab;
+  if(P.x>GA.sx0+.12&&P.x<GA.sx1-.12&&P.z>GA.sz0+.12&&P.z<GA.sz1-.12&&Math.abs(P.y-c.y)<.4)return c.moving?null:{k:'lift',label:'Ascensor'};
+  for(let L=0;L<3;L++)if(Math.abs(P.y-GA.LV[L])<.4&&Math.hypot(P.x-(GA.sx1+.45),P.z-(GA.dz0+GA.dz1)/2)<1.0&&!(c.lvl===L&&!c.moving)&&!(c.moving&&c.target===L))return {k:'lcall',L,label:'Llamar al ascensor'};
+  return null}
+function liftCall(L){const c=GAR.cab;if(c.moving){return}c.target=L;c.wait=.45;c.moving=true;c.v=0;AU.play('click');toast('El ascensor viene…')}
+function liftGo(L){const c=GAR.cab;if(c.moving||c.lvl===L)return;c.target=L;c.wait=.6;c.moving=true;c.v=0;AU.play('click')}
+function liftOpen(){
+  const sh=$('liftSheet'),box=$('liftList');box.innerHTML='';
+  ['Planta baja (P0)','Planta 1 (P1)','Planta 2 (P2)'].forEach((n,i)=>{const b=document.createElement('button');b.className='act gps'+(GAR.cab.lvl===i?' on':'');b.textContent=n+(GAR.cab.lvl===i?' · estás aquí':'');b.disabled=GAR.cab.lvl===i;
+    b.onclick=()=>{liftGo(i);liftClose()};box.appendChild(b)});
+  sh.hidden=false}
+function liftClose(){$('liftSheet').hidden=true}
+function garStep(dt,now){
+  const c=GAR.cab;if(!GAR.cabG)return;
+  for(let L=0;L<3;L++){const want=(!c.moving&&c.lvl===L&&c.wait<=0)?1:0;GAR.da[L]+=clamp(want-GAR.da[L],-dt*2.2,dt*2.2);
+    const m=GAR.doorM[L];if(m){const s=Math.max(.02,1-GAR.da[L]);m.scale.z=s;m.visible=GAR.da[L]<.97}
+    GAR.doorB[L].top=GAR.da[L]>.6?-1:GA.LV[L]+1.0;
+    const lp=GAR.lamps[L];if(lp)lp.material.color.setHex(c.lvl===L&&!c.moving?0x4cd964:0xff5252)}
+  if(c.wait>0){c.wait-=dt;if(c.wait<=0&&c.moving){if(c.lvl===c.target){c.moving=false}else c.dir=Math.sign(GA.LV[c.target]-c.y)}}
+  if(c.moving&&c.wait<=0){
+    const tg=GA.LV[c.target],dist=Math.abs(tg-c.y),sp=Math.min(1.9,.5+dist*1.1);
+    c.y+=Math.sign(tg-c.y)*Math.min(dist,sp*dt);
+    if(dist<.001||Math.abs(tg-c.y)<.001){c.y=tg;c.lvl=c.target;c.moving=false;c.wait=.35;AU.play('ding');if(Math.abs(P.y-c.y)<.4&&P.x>GA.sx0&&P.x<GA.sx1&&P.z>GA.sz0&&P.z<GA.sz1)toast(c.lvl?'Planta '+c.lvl:'Planta baja')}}
+  GAR.cabG.position.y=c.y}
 
 /* ===================== personajes con los que hablar ===================== */
 const mkLook=(g,o)=>Object.assign({gender:g,skin:1,hair:0,style:'corto',top:'camiseta',shirt:0,bottom:'pantalon',pants:8,acc:'nada',accColor:0,ball:1},o);
@@ -1736,7 +1977,8 @@ shopNpc('v_piloto','Piloto Rayo',['chico',{skin:3,hair:5,style:'pincho',top:'sud
 
 /* ===================== suelo, bloqueos y tiros ===================== */
 let blocks=[],doorSet=new Map(),lie=null,act=null,camBase=0,dlg=null;
-function floorH(x,z,yr,cam){if(yr===undefined)yr=P.y;const lim=yr+.13;let h=0;
+function floorH(x,z,yr,cam){if(yr===undefined)yr=P.y;{const gh=garFloor(x,z,yr);if(gh>=0)return gh}
+  if(yr===undefined)yr=P.y;const lim=yr+.13;let h=0;
   for(const q of HB){if(x<q.x0-.1||x>q.x1+1.1||z<q.y0-.1||z>q.y1+1.1)continue;const ct=cam?(q.cut===undefined?99:q.cut):99;
     for(const b of q.L.walk)if(b.top>h&&b.top<=lim&&x>=b.x0&&x<=b.x1&&z>=b.z0&&z<=b.z1&&b.fl<=ct)h=b.top;
     for(const b of q.L.furn)if(b.top>h&&b.top<=lim&&x>=b.x0&&x<=b.x1&&z>=b.z0&&z<=b.z1&&b.fl<=ct)h=b.top}
@@ -1994,6 +2236,7 @@ function nearestAction(){
       if(a.k==='lie'){const o=a.obj,d=distBox(o,P.x,P.z);if(d<.4&&d<bd&&Math.abs(P.y-o.y)<.3){bd=d;best={k:'lie',h:q,f:o,label:a.label}}}
       else{const z=a.zone;if(Math.abs(P.y-a.y)<.3&&P.x>z.x0&&P.x<z.x1&&P.z>z.z0&&P.z<z.z1&&bd>.05){bd=.05;best={k:a.k,h:q,a,label:a.label}}}}}
   if(!lie&&!act){
+    {const ga=garAction();if(ga&&!best)best=ga}
     const hk=hideNearest();if(hk&&!(best&&best.k==='talk'))best={k:'hfind',kid:hk,label:'¡Te pillé!'};
     const it=huntItem();if(it&&Math.hypot(P.x-it.x,P.z-it.z)<1.0&&Math.abs(P.y-it.y)<.6&&!(best&&best.k==='talk'))best={k:'treasure',label:QS.hunt===6?'Abrir el cofre':'Recoger estrella'};
     if(!best&&rc.st==='off'&&raceNearStart())best={k:'race',label:'Carrera (3 vueltas)'};
@@ -2002,7 +2245,7 @@ function nearestAction(){
   return best}
 function doAction(){
   if(state!=='play')return;const a=nearestAction();if(!a)return;
-  if(a.k==='stand')standUp();else if(a.k==='stopact')endAct();else if(a.k==='exit')exitCar();else if(a.k==='drive')enterCar(a.c);else if(a.k==='fuel')fuelStart(drv);else if(a.k==='race')raceStart();else if(a.k==='treasure')huntTake();else if(a.k==='hfind')hideFind(a.kid);else if(a.k==='adopt')petAdopt(a.p);else if(a.k==='petpat')petPat(a.p);else if(a.k==='fridge'){AU.play('ward',1);toast(['Dentro: medio limón, una lechuga triste y un yogur caducado en 2019.','¡Una luz y un eco! Hoy toca ensalada de nada.','Hay queso, pero el queso te mira mal. Lo cierras con respeto.','Una tarta. Parece rica. Está pegada a la bandeja desde el martes.'][Math.floor(Math.random()*4)])}else if(a.k==='tv'){AU.play('click');toast(['Dan un concurso de setos: gana el más verde.','Documental: «La vida secreta de los calcetines».','Telenoticias: hoy no ha pasado nada y ha sido genial.','Dibujos animados de una nube que se cree un perro.'][Math.floor(Math.random()*4)])}else if(a.k==='pee'||a.k==='shower')startAct(a.k,a.h,a.a);else if(a.k==='talk')startTalk(a.n);else if(a.k==='ward')toggleWard(a.h,a.i);else if(a.k==='lie')startLie(a.h,a.f)}
+  if(a.k==='stand')standUp();else if(a.k==='stopact')endAct();else if(a.k==='exit')exitCar();else if(a.k==='drive')enterCar(a.c);else if(a.k==='fuel')fuelStart(drv);else if(a.k==='race')raceStart();else if(a.k==='treasure')huntTake();else if(a.k==='hfind')hideFind(a.kid);else if(a.k==='adopt')petAdopt(a.p);else if(a.k==='petpat')petPat(a.p);else if(a.k==='lcall')liftCall(a.L);else if(a.k==='lift')liftOpen();else if(a.k==='fridge'){AU.play('ward',1);toast(['Dentro: medio limón, una lechuga triste y un yogur caducado en 2019.','¡Una luz y un eco! Hoy toca ensalada de nada.','Hay queso, pero el queso te mira mal. Lo cierras con respeto.','Una tarta. Parece rica. Está pegada a la bandeja desde el martes.'][Math.floor(Math.random()*4)])}else if(a.k==='tv'){AU.play('click');toast(['Dan un concurso de setos: gana el más verde.','Documental: «La vida secreta de los calcetines».','Telenoticias: hoy no ha pasado nada y ha sido genial.','Dibujos animados de una nube que se cree un perro.'][Math.floor(Math.random()*4)])}else if(a.k==='pee'||a.k==='shower')startAct(a.k,a.h,a.a);else if(a.k==='talk')startTalk(a.n);else if(a.k==='ward')toggleWard(a.h,a.i);else if(a.k==='lie')startLie(a.h,a.f)}
 function toggleWard(h,i){
   const w=h.ws[i];
   if(w.o){w.o=0;AU.play('ward',0);netSend({t:'ward',h:h.id,i,o:0});return}
@@ -2620,7 +2863,7 @@ function collide(R){let hit=0;const cx=Math.floor(P.x),cz=Math.floor(P.z);
     let nx=P.x-qx,nz=P.z-qz;const d=Math.hypot(nx,nz);
     if(d<rr){if(d>1e-6){nx/=d;nz/=d}else{nx=1;nz=0}P.x=qx+nx*rr;P.z=qz+nz*rr;const vn=P.vx*nx+P.vz*nz;if(vn<0){P.vx-=vn*nx;P.vz-=vn*nz}}}
   if(!drv&&P.y<.55)for(const c of cars){if(Math.abs(c.x-P.x)>1.9||Math.abs(c.z-P.z)>1.9)continue;
-    for(const [qx,qz] of carCircles(c)){let nx=P.x-qx,nz=P.z-qz;const d=Math.hypot(nx,nz),rr=R+.5;
+    for(const [qx,qz] of carCircles(c)){let nx=P.x-qx,nz=P.z-qz;const d=Math.hypot(nx,nz),rr=R+.38;
       if(d<rr){if(d>1e-6){nx/=d;nz/=d}else{nx=1;nz=0}P.x=qx+nx*rr;P.z=qz+nz*rr;const vn=P.vx*nx+P.vz*nz;if(vn<0){P.vx-=vn*nx;P.vz-=vn*nz}}}}
   return hit}
 function stepXZ(dx,dz){P.x+=dx;if(stepBlocked(P.x,P.z,P.y))P.x-=dx;P.z+=dz;if(stepBlocked(P.x,P.z,P.y))P.z-=dz}
@@ -2643,7 +2886,7 @@ function updatePlayer(dt){
   const {wx,wz,mag}=(lie||act)?{wx:0,wz:0,mag:0}:sw0;const ox=P.x,oz=P.z;
   if(state==='play'||state==='intro'){
     if(!ballMode){
-      const sp=mag<.12?0:2.15*Math.min(1,(mag-.08)/.8),k=1-Math.exp(-dt*11);
+      const sp=mag<.12?0:(P.x<TN.MX?2.6:2.15)*Math.min(1,(mag-.08)/.8),k=1-Math.exp(-dt*11);
       const l=Math.hypot(wx,wz)||1;P.vx+=(wx/l*sp-P.vx)*k;P.vz+=(wz/l*sp-P.vz)*k;
       const n=Math.max(1,Math.ceil(Math.hypot(P.vx,P.vz)*dt/.05));for(let i=0;i<n;i++){stepXZ(P.vx*dt/n,P.vz*dt/n);collide(PR)}
     }else{
@@ -2736,9 +2979,9 @@ function updateCamera(dt,now){
 
 /* ===================== entrada ===================== */
 let ctrlMode='joy';try{const c=localStorage.getItem('laberinto-control');if(c==='pad')ctrlMode='pad'}catch(e){}
-let dragging=false;const ptrs=new Map();let joyId=null,joyO={x:0,y:0},joyIdle={x:90,y:600},JR=58,CS=1.3;
-try{const c=parseFloat(localStorage.getItem('laberinto-escala'));if(c>=1&&c<=1.7)CS=c}catch(e){}
-function setCS(v){CS=v;JR=58*v;document.documentElement.style.setProperty('--cs',v);try{localStorage.setItem('laberinto-escala',v)}catch(e){}placeJoy(false)}
+let dragging=false;const ptrs=new Map();let joyId=null,joyO={x:0,y:0},joyIdle={x:90,y:600},JR=58,CS=.8;
+try{const c=parseFloat(localStorage.getItem('laberinto-escala2'));if(c>=.5&&c<=1.7)CS=c}catch(e){}
+function setCS(v){CS=v;JR=58*v;document.documentElement.style.setProperty('--cs',v);try{localStorage.setItem('laberinto-escala2',v)}catch(e){}placeJoy(false)}
 document.documentElement.style.setProperty('--cs',CS);JR=58*CS;
 const joyEl=$('joy'),knob=$('knob');
 function placeJoy(active,x,y){const h=app.clientHeight;joyIdle={x:26+70*CS,y:h-(48+70*CS)};const c=active?{x,y}:joyIdle;joyEl.style.left=(c.x-70*CS)+'px';joyEl.style.top=(c.y-70*CS)+'px';
@@ -2807,7 +3050,7 @@ function bindSegs(){
   seg($('mSize'),SIZES,()=>mazeN,v=>{if(v!==mazeN){newMaze(v);closeMenu();toast('Nuevo laberinto')}});
   seg($('mQual'),QUALS,()=>quality,v=>{quality=v;applyQuality()});
   seg($('mCtrl'),[['joy','Joystick'],['pad','Cruceta']],()=>ctrlMode,v=>{ctrlMode=v;applyCtrl()});
-  seg($('mCs'),[[1,'Normal'],[1.3,'Grande'],[1.6,'Enorme']],()=>CS,v=>setCS(v))}
+  seg($('mCs'),[[.55,'Mini'],[.8,'Pequeño'],[1,'Normal'],[1.3,'Grande'],[1.6,'Enorme']],()=>CS,v=>setCS(v))}
 function toggleView(){firstPerson=!firstPerson;pitch=firstPerson?0:-.62;toast(firstPerson?'Primera persona':'Tercera persona');if(!firstPerson)camDist=desiredDist}
 let showMap=true;function toggleMap(){showMap=!showMap;$('mmWrap').hidden=!showMap;$('bMap').setAttribute('aria-pressed',showMap)}
 function recenter(){camYaw=heading;pitch=firstPerson?0:-.62}
@@ -2835,7 +3078,7 @@ function buildCharOpts(){
 $('bPlay').onclick=()=>{pendingNet=null;startFromIntro()};$('bIntroChar').onclick=()=>openChar('intro');$('bMenu').onclick=openMenu;$('mBack').onclick=closeMenu;
 $('mChar').onclick=()=>openChar('menu');$('mNew').onclick=()=>{newMaze(mazeN);closeMenu();toast('Nuevo laberinto')};
 $('charDone').onclick=closeChar;$('bAgain').onclick=()=>{newMaze(mazeN);state='play';$('win').hidden=true;recenter()};
-$('bView').onclick=toggleView;$('bCenter').onclick=recenter;$('bMap').onclick=toggleMap;
+$('liftBack').onclick=liftClose;$('liftSheet').addEventListener('pointerdown',e=>{if(e.target===$('liftSheet'))liftClose()});$('bGps').onclick=gpsOpen;$('gpsBack').onclick=gpsClose;$('gpsX').onclick=()=>gpsCancel('Ruta cancelada');$('gpsSheet').addEventListener('pointerdown',e=>{if(e.target===$('gpsSheet'))gpsClose()});$('bView').onclick=toggleView;$('bCenter').onclick=recenter;$('bMap').onclick=toggleMap;
 $('bMark').onclick=e=>{if(e.target.id==='markDot')return;placeMark()};
 $('markDot').onclick=e=>{e.stopPropagation();markColor=(markColor+1)%MARKC.length;$('markDot').style.background=MARKC[markColor]};
 $('markDot').style.background=MARKC[0];
@@ -2848,7 +3091,7 @@ const mmc=$('mm'),mmx=mmc.getContext('2d');let mmT=0;
 function drawMap(){
   const S=mmc.width;mmx.clearRect(0,0,S,S);mmx.save();mmx.fillStyle='rgba(255,250,246,.92)';mmx.fillRect(0,0,S,S);
   mmR+=((P.x<TN.MX?9:3.7)-mmR)*.12;const sc=S/(2*mmR);mmx.translate(S/2,S/2);mmx.rotate(camYaw-Math.PI);mmx.scale(sc,sc);mmx.translate(-P.x,-P.z);
-  if(!townMM)buildTownMM();mmx.drawImage(townMM,0,0,TN.MX+1,TN.D2);
+  if(!townMM)buildTownMM();mmx.drawImage(townMM,0,0,TN.MX+1,TN.D2);gpsMM(mmx);
   const cell=(x,y,col)=>{mmx.fillStyle=col;mmx.fillRect(x,y,1.02,1.02)};
   for(const k of visited){const [x,y]=k.split(',').map(Number);cell(x,y,tun[y]&&tun[y][x]?'#b9aed0':'#f3d6c6');
     for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=x+dx,Y=y+dy;if(grid[Y]&&grid[Y][X])cell(X,Y,grid[Y][X]===2?'#bdb5d3':grid[Y][X]===3?'#e3b98f':'#93c9a6')}}
@@ -2893,7 +3136,7 @@ function frame(now){
     dollRoot.position.copy(studioPos);dollRoot.position.y+=ballMode?BR:0;heading+=0;
     if(!ballMode){dollRoot.rotation.y=spin+Math.sin(now/1500)*.15;const id=Math.sin(now/900)*.02;rig.arms[0].rotation.x=id;rig.arms[1].rotation.x=-id;rig.legs[0].rotation.x=rig.legs[1].rotation.x=0;for(const l of rig.legs)l.userData.knee.rotation.x=0;for(const a of rig.arms)a.userData.elbow.rotation.x=-.14;rig.body.position.y=id*.15;rig.root.visible=true}
     else{ballMesh.rotation.y=spin;ballMesh.visible=true}}
-  puzzleStep(dt,now);footStep(dt,now);cbStep(dt,now);worldStep(dt,now);carsStep(dt,now);southStep(dt,now);netStep(dt,now);lookStep(dt);houseVis();actFx(dt,now);AU.tick(dt,state==='play');
+  puzzleStep(dt,now);footStep(dt,now);cbStep(dt,now);worldStep(dt,now);carsStep(dt,now);southStep(dt,now);gpsStep(dt,now);garStep(dt,now);netStep(dt,now);lookStep(dt);houseVis();actFx(dt,now);AU.tick(dt,state==='play');
   updateCamera(dt,now);
   {let tn=state==='intro'?[70,360]:P.x<TN.MX+.5?[14,64]:[7,clamp(mazeG*1.1,22,46)];if(window.__fog)tn=window.__fog;fogN+=(tn[0]-fogN)*(1-Math.exp(-dt*3));fogF+=(tn[1]-fogF)*(1-Math.exp(-dt*3));scene.fog.near=fogN;scene.fog.far=fogF}
   // tejados y antorchas
@@ -3198,7 +3441,7 @@ try{const q=new URLSearchParams(location.search).get('sala');if(q)$('inCode').va
 new ResizeObserver(resize).observe(app);addEventListener('resize',resize);
 applyQuality();bindSegs();newMaze(mazeN);
 requestAnimationFrame(frame);
-window.__dbg={doAction,startAct,loadGame,buildSave,get cars(){return cars},get blocks(){return blocks},get npcsL(){return npcs},get scene(){return scene},get rc(){return rc},CIR,QS,get hs(){return hs},get pets(){return pets},raceStart,startHide,huntItem,huntTake,huntStart,petAdopt,washStart,petFree,get fueling(){return fueling},southStep,hideSpots,HUNT_POOL,HUNT_FINAL,hideFind,hideNearest,driveAction,offTrack,cirNear,PUMPS,WASH,get tbs(){return tbs},get drv(){return drv},enterCar,exitCar,carNear,get HB(){return HB},lookStep,get lookId(){return lookId},stepBlocked,get blocks(){return blocks},get grid2(){return grid},get houses(){return houses},startAct,endAct,nearestAction,floorH,AU,doAction,houseVis,get curAct(){return act},set py(v){P.y=v},addRemote,netApply,remotes,worldSnapshot,guestWorld,netStep,get netOn(){return !!net},get P(){return P},get state(){return state},play,setMode,openChar,closeChar,newMaze,camera,scene,get G(){return G},get grid(){return grid},get tun(){return tun},set camYaw(v){camYaw=v},get camYaw(){return camYaw},set stick(v){stick.x=v[0];stick.y=v[1]},toggleView,get ballMode(){return ballMode},get exitC(){return exitC},set pos(v){P.x=v[0];P.z=v[1]},get heading(){return heading},get steps(){return steps},get torches(){return torches},placeMark,marks,set pitch(v){pitch=v},set spin(v){spin=v},gates:()=>gates,keys:()=>keysArr,signs:()=>signs,get keyCount(){return keyCount},get field(){return field},get fb(){return fb},adv:sec=>{const n=Math.round(sec/.05);for(let i=0;i<n;i++){const nw=performance.now();if(state==='play')playTime+=.05;updatePlayer(.05);puzzleStep(.05,nw);footStep(.05,nw);cbStep(.05,nw);worldStep(.05,nw);carsStep(.05,nw);southStep(.05,nw);updateCamera(.05,nw)}},get court(){return court},get cb(){return cb},get baskets(){return baskets},get houses(){return houses},npcs:()=>npcs,get lie(){return lie},act:()=>doAction(),action:()=>nearestAction(),floorH,shoot:doShoot,shoot0:()=>doShoot(0),pick:pickOpt,get dlg(){return dlg},standUp,endTalk,startTalk,setCb:(x,z,vx,vz)=>{cb.x=x;cb.z=z;cb.vx=vx;cb.vz=vz},get goals(){return goals},kick:()=>doKick(),setBall:(x,z,vx,vz)=>{fb.x=x;fb.z=z;fb.vx=vx;fb.vz=vz},jump:()=>doJump(),
+window.__dbg={GAR,GA,garAction,liftGo,liftCall,garStep,GPS,gpsDests,gpsStart,gpsCancel,gpsStep,gpsOpen,doAction,startAct,loadGame,buildSave,get cars(){return cars},get blocks(){return blocks},get npcsL(){return npcs},get scene(){return scene},get rc(){return rc},CIR,QS,get hs(){return hs},get pets(){return pets},raceStart,startHide,huntItem,huntTake,huntStart,petAdopt,washStart,petFree,get fueling(){return fueling},southStep,hideSpots,HUNT_POOL,HUNT_FINAL,hideFind,hideNearest,driveAction,offTrack,cirNear,PUMPS,WASH,get tbs(){return tbs},get drv(){return drv},enterCar,exitCar,carNear,get HB(){return HB},lookStep,get lookId(){return lookId},stepBlocked,get blocks(){return blocks},get grid2(){return grid},get houses(){return houses},startAct,endAct,nearestAction,floorH,AU,doAction,houseVis,get curAct(){return act},set py(v){P.y=v},addRemote,netApply,remotes,worldSnapshot,guestWorld,netStep,get netOn(){return !!net},get P(){return P},get state(){return state},play,setMode,openChar,closeChar,newMaze,camera,scene,get G(){return G},get grid(){return grid},get tun(){return tun},set camYaw(v){camYaw=v},get camYaw(){return camYaw},set stick(v){stick.x=v[0];stick.y=v[1]},toggleView,get ballMode(){return ballMode},get exitC(){return exitC},set pos(v){P.x=v[0];P.z=v[1]},get heading(){return heading},get steps(){return steps},get torches(){return torches},placeMark,marks,set pitch(v){pitch=v},set spin(v){spin=v},gates:()=>gates,keys:()=>keysArr,signs:()=>signs,get keyCount(){return keyCount},get field(){return field},get fb(){return fb},adv:sec=>{const n=Math.round(sec/.05);for(let i=0;i<n;i++){const nw=performance.now();if(state==='play')playTime+=.05;updatePlayer(.05);puzzleStep(.05,nw);footStep(.05,nw);cbStep(.05,nw);worldStep(.05,nw);carsStep(.05,nw);southStep(.05,nw);gpsStep(.05,nw);garStep(.05,nw);updateCamera(.05,nw)}},get court(){return court},get cb(){return cb},get baskets(){return baskets},get houses(){return houses},npcs:()=>npcs,get lie(){return lie},act:()=>doAction(),action:()=>nearestAction(),floorH,shoot:doShoot,shoot0:()=>doShoot(0),pick:pickOpt,get dlg(){return dlg},standUp,endTalk,startTalk,setCb:(x,z,vx,vz)=>{cb.x=x;cb.z=z;cb.vx=vx;cb.vz=vz},get goals(){return goals},kick:()=>doKick(),setBall:(x,z,vx,vz)=>{fb.x=x;fb.z=z;fb.vx=vx;fb.vz=vz},jump:()=>doJump(),
 solvable(){const open=new Set();let held=0,counted=new Set();
   for(let it=0;it<20;it++){const seen=new Set(['1,1']),q=[[1,1]],touch=[];let ks=0;
     while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=G||Y>=G||grid[Y][X]||seen.has(X+','+Y))continue;
