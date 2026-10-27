@@ -3788,23 +3788,25 @@ function addRemote(id,name,look){
 function removeRemote(id){for(const c of cars)if(c.occ===id)c.occ=null;const r=remotes.get(id);if(!r)return;if(r.rig)scene.remove(r.rig.root);if(r.lab){scene.remove(r.lab);r.lab.material.map.dispose();r.lab.material.dispose()}remotes.delete(id);netPill()}
 function netPill(){chatVis();const p=$('netPill');if(!net){p.hidden=true;$('mNet').hidden=true;return}
   p.hidden=false;const n=remotes.size+1;p.textContent='Sala '+net.code+' · '+n+' jugador'+(n>1?'es':'');$('mNet').hidden=false}
-function netStop(){if(!net)return;try{net.peer.destroy()}catch(e){}net=null;for(const id of [...remotes.keys()])removeRemote(id);netPill()}
+function netStop(keep){if(!keep)rj=null;if(!net)return;const nn=net;net=null;try{nn.peer.destroy()}catch(e){}for(const id of [...remotes.keys()])removeRemote(id);netPill()}
 const roster=()=>{const l=[{id:'host',name:shownName(),doll:{...doll}}];for(const r of remotes.values())l.push({id:r.id,name:r.name,doll:r.look});return l};
 function worldSnapshot(){const s=buildSave();s.P={x:SPAWN[0],z:SPAWN[1],y:0};s.visited=[V0];s.marks=[];s.steps=0;s.walked=0;s.time=0;s.keyCount=0;s.ball=false;return s}
 function netBegin(){
   const pn=pendingNet;pendingNet=null;if(!pn)return;
   if(typeof Peer==='undefined'){toast('No hay conexión con el servicio online');return}
-  netStop();
+  netStop(!!pn.resume);
   if(pn.mode==='host'){
-    const code=netCode(),peer=new Peer('labsetos-'+code);net={peer,host:true,code,conns:new Map()};
+    const code=pn.code||netCode(),peer=new Peer('labsetos-'+code);net={peer,host:true,code,conns:new Map()};
     peer.on('open',()=>{netPill();toast('Sala '+code+': pulsa el código para invitar')});
-    peer.on('error',e=>{if(e.type==='unavailable-id'){pendingNet={mode:'host'};netBegin()}else{toast('Error de conexión online');netStop()}});
+    peer.on('disconnected',()=>{if(!document.hidden&&net&&net.peer===peer)try{peer.reconnect()}catch(e){}});
+    peer.on('error',e=>{if(net&&net.peer!==peer)return;if(e.type==='unavailable-id'){if(pn.code&&(pn.tries||0)<25){const q={mode:'host',code:pn.code,tries:(pn.tries||0)+1,resume:1};netStop(true);setTimeout(()=>{pendingNet=q;netBegin()},3000)}else{pendingNet={mode:'host'};netBegin()}}else if(e.type==='network'||e.type==='server-error'||e.type==='socket-error'||e.type==='socket-closed'){}else{toast('Error de conexión online');netStop()}});
     peer.on('connection',c=>{
       c.on('open',()=>{
         if(net.conns.size>=5){c.send({t:'full'});setTimeout(()=>c.close(),300);return}
         net.conns.set(c.peer,c)});
       c.on('data',m=>{try{
         if(m.t==='hello'){
+          if(m.old&&remotes.has(m.old)){removeRemote(m.old);net.conns.delete(m.old);netSend({t:'leave',id:m.old})}
           const players=roster();
           c.send({t:'world',s:worldSnapshot(),players});
           addRemote(c.peer,m.name,m.doll);netSend({t:'join',id:c.peer,name:m.name,doll:m.doll},c.peer);AU.play('join');toast((m.name||'Alguien')+' se ha unido · '+(remotes.size+1)+' jugadores')}
@@ -3812,20 +3814,32 @@ function netBegin(){
       c.on('close',()=>{net&&net.conns.delete(c.peer);const r=remotes.get(c.peer);if(r){AU.play('leave');toast(r.name+' se ha ido')}removeRemote(c.peer);netSend({t:'leave',id:c.peer})})})
   }else{
     const peer=new Peer();net={peer,host:false,code:pn.code,conns:new Map()};
-    const fail=()=>{toast('No se pudo entrar en la sala '+pn.code);netStop()};
+    const fail=e=>{if(!net||net.peer!==peer||net.joined)return;if(rj){netStop(true);setTimeout(netRejoin,2500+rj.tries*1000)}else{toast('No se pudo entrar en la sala '+pn.code);netStop()}};
     peer.on('error',fail);
     peer.on('open',()=>{const c=peer.connect('labsetos-'+pn.code,{reliable:true});net.conns.set('host',c);
       const to=setTimeout(()=>{if(net&&!net.joined)fail()},9000);
-      c.on('open',()=>c.send({t:'hello',name:shownName(),doll:{...doll}}));
+      c.on('open',()=>c.send({t:'hello',name:shownName(),doll:{...doll},old:rj&&rj.oldId}));
       c.on('data',m=>{if(m.t==='world'){net.joined=1;clearTimeout(to);guestWorld(m)}else if(m.t==='full'){toast('La sala está llena');netStop()}else netApply(m)});
-      c.on('close',()=>{if(net){toast('El anfitrión ha cerrado la sala');netStop()}})})
+      c.on('close',()=>{if(!net||net.peer!==peer)return;if(net.joined)netRejoin();else{toast('El anfitrión ha cerrado la sala');netStop()}})})
   }
 }
+let rj=null;
+function netRejoin(){
+  if(!rj){if(!net||net.host||!net.joined)return;rj={code:net.code,tries:0,pos:{x:P.x,z:P.z},oldId:net.peer.id}}
+  if(document.hidden){rj.wait=1;return}
+  if(rj.tries>=12){const c=rj.code;rj=null;toast('No se pudo volver a la sala '+c);netStop();return}
+  rj.tries++;toast('Reconectando a la sala '+rj.code+'...');netStop(true);pendingNet={mode:'join',code:rj.code,resume:1};netBegin()}
+function netResume(){
+  if(rj){if(rj.wait){rj.wait=0;netRejoin()}return}
+  if(!net)return;
+  if(net.host){const p=net.peer;if(p.destroyed){const code=net.code;netStop();pendingNet={mode:'host',code,resume:1};netBegin();toast('Reconectando la sala '+code+'...')}else if(p.disconnected){try{p.reconnect()}catch(e){}}}
+  else{const c=net.conns.get('host');if(net.joined&&(!c||!c.open||net.peer.destroyed))netRejoin()}}
+addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(netResume,500)});addEventListener('pageshow',()=>setTimeout(netResume,500));addEventListener('online',()=>setTimeout(netResume,1000));
 function guestWorld(m){
   loadGame(m.s);visited=new Set([V0]);steps=0;walked=0;playTime=0;keyCount=0;for(const mk of marks)disposeMark(mk);marks.length=0;
   startPos();swapActors();state='play';$('intro').hidden=true;$('hud').hidden=false;updateHud();
   for(const p of m.players)if(p.id!==net.peer.id)addRemote(p.id,p.name,p.doll);
-  netPill();toast('Conectado a la sala '+net.code)}
+  netPill();if(rj){if(rj.pos){P.x=rj.pos.x;P.z=rj.pos.z;P.y=floorH(P.x,P.z,1);P.vx=P.vz=0}rj=null;toast('Reconectado a la sala '+net.code)}else toast('Conectado a la sala '+net.code)}
 function netApply(m){
   if(m.t==='pos'){const r=remotes.get(m.id);if(r){r.tx=m.x;r.tz=m.z;r.ty=m.y;r.th=m.h;r.s=m.s;r.inCar=m.c>=0;if(!r.init){r.init=1;r.x=m.x;r.z=m.z;r.y=m.y;r.h=m.h}}}
   else if(m.t==='join'){addRemote(m.id,m.name,m.doll);AU.play('join');toast((m.name||'Alguien')+' se ha unido · '+(remotes.size+1)+' jugadores')}
@@ -3864,7 +3878,7 @@ try{const q=new URLSearchParams(location.search).get('sala');if(q)$('inCode').va
 new ResizeObserver(resize).observe(app);addEventListener('resize',resize);
 applyQuality();bindSegs();gfxApply();newMaze(mazeN);
 requestAnimationFrame(frame);
-window.__dbg={GFX,GX,gfxApply,gfxFrame,GLASSY,set camyaw(v){camYaw=v;heading=v},get camera(){return camera},chatSend,chatAdd,CHAT,GAR,GA,garAction,liftGo,liftCall,garStep,GPS,gpsDests,gpsStart,gpsCancel,gpsStep,gpsOpen,doAction,startAct,loadGame,buildSave,get cars(){return cars},get blocks(){return blocks},get npcsL(){return npcs},get scene(){return scene},get rc(){return rc},CIR,QS,get hs(){return hs},get pets(){return pets},raceStart,startHide,huntItem,huntTake,huntStart,petAdopt,washStart,petFree,get fueling(){return fueling},southStep,hideSpots,HUNT_POOL,HUNT_FINAL,hideFind,hideNearest,driveAction,offTrack,cirNear,PUMPS,WASH,get tbs(){return tbs},get drv(){return drv},enterCar,exitCar,carNear,get HB(){return HB},lookStep,get lookId(){return lookId},stepBlocked,get blocks(){return blocks},get grid2(){return grid},get houses(){return houses},startAct,endAct,nearestAction,floorH,AU,doAction,houseVis,get curAct(){return act},set py(v){P.y=v},addRemote,netApply,remotes,worldSnapshot,guestWorld,netStep,get netOn(){return !!net},get P(){return P},get state(){return state},play,setMode,openChar,closeChar,newMaze,camera,scene,get G(){return G},get grid(){return grid},get tun(){return tun},set camYaw(v){camYaw=v},get camYaw(){return camYaw},set stick(v){stick.x=v[0];stick.y=v[1]},toggleView,get ballMode(){return ballMode},get exitC(){return exitC},set pos(v){P.x=v[0];P.z=v[1]},get heading(){return heading},get steps(){return steps},get torches(){return torches},placeMark,marks,set pitch(v){pitch=v},set spin(v){spin=v},gates:()=>gates,keys:()=>keysArr,signs:()=>signs,get keyCount(){return keyCount},get field(){return field},get fb(){return fb},adv:sec=>{const n=Math.round(sec/.05);for(let i=0;i<n;i++){const nw=performance.now();if(state==='play')playTime+=.05;updatePlayer(.05);puzzleStep(.05,nw);footStep(.05,nw);cbStep(.05,nw);worldStep(.05,nw);carsStep(.05,nw);southStep(.05,nw);gpsStep(.05,nw);garStep(.05,nw);updateCamera(.05,nw);gfxFrame(.05,nw)}},get court(){return court},get cb(){return cb},get baskets(){return baskets},get houses(){return houses},npcs:()=>npcs,get lie(){return lie},act:()=>doAction(),action:()=>nearestAction(),floorH,shoot:doShoot,shoot0:()=>doShoot(0),pick:pickOpt,get dlg(){return dlg},standUp,endTalk,startTalk,setCb:(x,z,vx,vz)=>{cb.x=x;cb.z=z;cb.vx=vx;cb.vz=vz},get goals(){return goals},kick:()=>doKick(),setBall:(x,z,vx,vz)=>{fb.x=x;fb.z=z;fb.vx=vx;fb.vz=vz},jump:()=>doJump(),
+window.__dbg={get net(){return net},netResume,get rj(){return rj},GFX,GX,gfxApply,gfxFrame,GLASSY,set camyaw(v){camYaw=v;heading=v},get camera(){return camera},chatSend,chatAdd,CHAT,GAR,GA,garAction,liftGo,liftCall,garStep,GPS,gpsDests,gpsStart,gpsCancel,gpsStep,gpsOpen,doAction,startAct,loadGame,buildSave,get cars(){return cars},get blocks(){return blocks},get npcsL(){return npcs},get scene(){return scene},get rc(){return rc},CIR,QS,get hs(){return hs},get pets(){return pets},raceStart,startHide,huntItem,huntTake,huntStart,petAdopt,washStart,petFree,get fueling(){return fueling},southStep,hideSpots,HUNT_POOL,HUNT_FINAL,hideFind,hideNearest,driveAction,offTrack,cirNear,PUMPS,WASH,get tbs(){return tbs},get drv(){return drv},enterCar,exitCar,carNear,get HB(){return HB},lookStep,get lookId(){return lookId},stepBlocked,get blocks(){return blocks},get grid2(){return grid},get houses(){return houses},startAct,endAct,nearestAction,floorH,AU,doAction,houseVis,get curAct(){return act},set py(v){P.y=v},addRemote,netApply,remotes,worldSnapshot,guestWorld,netStep,get netOn(){return !!net},get P(){return P},get state(){return state},play,setMode,openChar,closeChar,newMaze,camera,scene,get G(){return G},get grid(){return grid},get tun(){return tun},set camYaw(v){camYaw=v},get camYaw(){return camYaw},set stick(v){stick.x=v[0];stick.y=v[1]},toggleView,get ballMode(){return ballMode},get exitC(){return exitC},set pos(v){P.x=v[0];P.z=v[1]},get heading(){return heading},get steps(){return steps},get torches(){return torches},placeMark,marks,set pitch(v){pitch=v},set spin(v){spin=v},gates:()=>gates,keys:()=>keysArr,signs:()=>signs,get keyCount(){return keyCount},get field(){return field},get fb(){return fb},adv:sec=>{const n=Math.round(sec/.05);for(let i=0;i<n;i++){const nw=performance.now();if(state==='play')playTime+=.05;updatePlayer(.05);puzzleStep(.05,nw);footStep(.05,nw);cbStep(.05,nw);worldStep(.05,nw);carsStep(.05,nw);southStep(.05,nw);gpsStep(.05,nw);garStep(.05,nw);updateCamera(.05,nw);gfxFrame(.05,nw)}},get court(){return court},get cb(){return cb},get baskets(){return baskets},get houses(){return houses},npcs:()=>npcs,get lie(){return lie},act:()=>doAction(),action:()=>nearestAction(),floorH,shoot:doShoot,shoot0:()=>doShoot(0),pick:pickOpt,get dlg(){return dlg},standUp,endTalk,startTalk,setCb:(x,z,vx,vz)=>{cb.x=x;cb.z=z;cb.vx=vx;cb.vz=vz},get goals(){return goals},kick:()=>doKick(),setBall:(x,z,vx,vz)=>{fb.x=x;fb.z=z;fb.vx=vx;fb.vz=vz},jump:()=>doJump(),
 solvable(){const open=new Set();let held=0,counted=new Set();
   for(let it=0;it<20;it++){const seen=new Set(['1,1']),q=[[1,1]],touch=[];let ks=0;
     while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=G||Y>=G||grid[Y][X]||seen.has(X+','+Y))continue;
