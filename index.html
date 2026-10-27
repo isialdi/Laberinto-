@@ -3796,7 +3796,7 @@ function netBegin(){
   if(typeof Peer==='undefined'){toast('No hay conexión con el servicio online');return}
   netStop(!!pn.resume);
   if(pn.mode==='host'){
-    const code=pn.code||netCode(),peer=new Peer('labsetos-'+code);net={peer,host:true,code,conns:new Map()};
+    const code=pn.code||netCode(),peer=new Peer('labsetos-'+code,PEERCFG);net={peer,host:true,code,conns:new Map()};
     peer.on('open',()=>{netPill();toast('Sala '+code+': pulsa el código para invitar')});
     peer.on('disconnected',()=>{if(!document.hidden&&net&&net.peer===peer)try{peer.reconnect()}catch(e){}});
     peer.on('error',e=>{if(net&&net.peer!==peer)return;if(e.type==='unavailable-id'){if(pn.code&&(pn.tries||0)<25){const q={mode:'host',code:pn.code,tries:(pn.tries||0)+1,resume:1};netStop(true);setTimeout(()=>{pendingNet=q;netBegin()},3000)}else{pendingNet={mode:'host'};netBegin()}}else if(e.type==='network'||e.type==='server-error'||e.type==='socket-error'||e.type==='socket-closed'){}else{toast('Error de conexión online');netStop()}});
@@ -3813,16 +3813,17 @@ function netBegin(){
         else{m.id=c.peer;netApply(m);netSend(m,c.peer)}}catch(e){toast('Error online: '+(e&&e.message||e))}});
       c.on('close',()=>{net&&net.conns.delete(c.peer);const r=remotes.get(c.peer);if(r){AU.play('leave');toast(r.name+' se ha ido')}removeRemote(c.peer);netSend({t:'leave',id:c.peer})})})
   }else{
-    const peer=new Peer();net={peer,host:false,code:pn.code,conns:new Map()};
-    const fail=e=>{if(!net||net.peer!==peer||net.joined)return;if(rj){netStop(true);setTimeout(netRejoin,2500+rj.tries*1000)}else{toast('No se pudo entrar en la sala '+pn.code);netStop()}};
+    const peer=new Peer(undefined,PEERCFG);net={peer,host:false,code:pn.code,conns:new Map()};
+    const fail=e=>{if(!net||net.peer!==peer||net.joined)return;if(rj){netStop(true);setTimeout(netRejoin,2500+rj.tries*1000)}else{const t=e&&e.type;toast(t==='peer-unavailable'?'No existe la sala '+pn.code+': revisa el código o que el anfitrión siga dentro':(t==='timeout'||!t)?'La sala '+pn.code+' no responde: puede ser la red (prueba con la misma wifi)':'No se pudo entrar en la sala '+pn.code+' ('+t+')');netStop()}};
     peer.on('error',fail);
     peer.on('open',()=>{const c=peer.connect('labsetos-'+pn.code,{reliable:true});net.conns.set('host',c);
-      const to=setTimeout(()=>{if(net&&!net.joined)fail()},9000);
+      const to=setTimeout(()=>{if(net&&!net.joined)fail({type:'timeout'})},25000);
       c.on('open',()=>c.send({t:'hello',name:shownName(),doll:{...doll},old:rj&&rj.oldId}));
       c.on('data',m=>{if(m.t==='world'){net.joined=1;clearTimeout(to);guestWorld(m)}else if(m.t==='full'){toast('La sala está llena');netStop()}else netApply(m)});
       c.on('close',()=>{if(!net||net.peer!==peer)return;if(net.joined)netRejoin();else{toast('El anfitrión ha cerrado la sala');netStop()}})})
   }
 }
+const PEERCFG={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}};
 let rj=null;
 function netRejoin(){
   if(!rj){if(!net||net.host||!net.joined)return;rj={code:net.code,tries:0,pos:{x:P.x,z:P.z},oldId:net.peer.id}}
