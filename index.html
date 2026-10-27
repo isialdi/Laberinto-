@@ -190,6 +190,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
 #app.uifx .act{box-shadow:0 3px 0 rgba(75,61,99,.13)}
 #app.uifx .act:active,#app.uifx .chip:active,#app.uifx .gfxrow:active{transform:scale(.96)}
 #app.uifx .seg button[aria-pressed="true"]{box-shadow:0 2px 8px rgba(75,61,99,.3)}
+.vtag{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:max(10px,env(safe-area-inset-bottom,0px));font-weight:800;font-size:.72rem;letter-spacing:.06em;color:var(--ink2);background:var(--glass);padding:3px 10px;border-radius:999px;pointer-events:none;box-shadow:0 1px 4px rgba(75,61,99,.15)}
 </style>
 
 <div id="app">
@@ -240,6 +241,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="seg" id="introSize" role="group" aria-label="Tamaño"></div>
     </div>
     <div class="opts2" id="players" role="group" aria-label="Jugador" hidden></div>
+    <div class="vtag" id="vTag">v44</div>
     <div class="opts2" id="charsIO"><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button></div>
     <div class="rowp"><input class="name" id="inName" maxlength="14" placeholder="Tu nombre" autocomplete="off" autocapitalize="words" aria-label="Tu nombre"><button class="play" id="bPlay">Jugar</button></div>
     <div class="opts2"><button class="chip" id="bHost">Crear partida online</button><input class="name" id="inCode" maxlength="4" placeholder="Código" autocomplete="off" aria-label="Código de sala" style="width:96px;height:38px;text-align:center;padding:0 10px;font-size:.9rem"><button class="chip" id="bJoin">Unirse</button></div>
