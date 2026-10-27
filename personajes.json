@@ -1,0 +1,58 @@
+{
+ "v": 1,
+ "players": {
+  "jugador": {
+   "name": "Jugador",
+   "doll": {
+    "gender": "chico",
+    "skin": 1,
+    "hair": 0,
+    "style": "corto",
+    "top": "sudadera",
+    "shirt": 9,
+    "bottom": "corto",
+    "pants": 15,
+    "acc": "nada",
+    "accColor": 2,
+    "ball": 1,
+    "v": 2
+   }
+  },
+  "eritz": {
+   "name": "Eritz",
+   "doll": {
+    "gender": "chico",
+    "skin": 1,
+    "hair": 0,
+    "style": "corto",
+    "top": "sudadera",
+    "shirt": 9,
+    "bottom": "corto",
+    "pants": 15,
+    "acc": "nada",
+    "accColor": 2,
+    "ball": 1,
+    "v": 2
+   }
+  },
+  "malen": {
+   "name": "Malen",
+   "doll": {
+    "gender": "chica",
+    "skin": 0,
+    "hair": 0,
+    "style": "coleta",
+    "top": "chaqueta",
+    "shirt": 0,
+    "bottom": "pantalon",
+    "pants": 19,
+    "acc": "lazo",
+    "accColor": 3,
+    "ball": 1,
+    "v": 2,
+    "voice": 2,
+    "vtone": 1
+   }
+  }
+ }
+}
