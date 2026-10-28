@@ -247,7 +247,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="seg" id="introSize" role="group" aria-label="Tamaño"></div>
     </div>
     <div class="opts2" id="players" role="group" aria-label="Jugador" hidden></div>
-    <div class="vtag" id="vTag">v51</div>
+    <div class="vtag" id="vTag">v53</div>
     <div class="opts2" id="charsIO"><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button></div>
     <div class="rowp"><input class="name" id="inName" maxlength="14" placeholder="Tu nombre" autocomplete="off" autocapitalize="words" aria-label="Tu nombre"><button class="play" id="bPlay">Jugar</button></div>
     <div class="opts2"><button class="chip" id="bHost">Crear partida online</button><input class="name" id="inCode" maxlength="4" placeholder="Código" autocomplete="off" aria-label="Código de sala" style="width:96px;height:38px;text-align:center;padding:0 10px;font-size:.9rem"><button class="chip" id="bJoin">Unirse</button></div>
@@ -1042,6 +1042,9 @@ function buildTownProps(M){
     const bed=new T.Mesh(new T.CylinderGeometry(1.2,1.25,.26,26),st);bed.position.set(3.5,.13,26.5);bed.receiveShadow=true;world.add(bed);
     const soil=new T.Mesh(new T.CylinderGeometry(1.05,1.05,.04,26),new T.MeshStandardMaterial({color:0x6b4a3a,roughness:1}));soil.position.set(3.5,.26,26.5);world.add(soil);
     townProps.push({x:3.5,z:26.5,r:1.25,top:.3,yb:0});
+    const bed2=new T.Mesh(new T.CylinderGeometry(1.2,1.25,.26,26),st);bed2.position.set(59,.13,35);bed2.receiveShadow=true;world.add(bed2);
+    const soil2=new T.Mesh(new T.CylinderGeometry(1.05,1.05,.04,26),new T.MeshStandardMaterial({color:0x6b4a3a,roughness:1}));soil2.position.set(59,.26,35);world.add(soil2);
+    townProps.push({x:59,z:35,r:1.25,top:.3,yb:0});
     const ped=new T.Mesh(new T.CylinderGeometry(.5,.6,.5,16),st);ped.position.set(59,.25,35);world.add(ped);
     const stat=new T.Mesh(new T.SphereGeometry(.28,14,10),new T.MeshStandardMaterial({color:0xffd86b,roughness:.35,metalness:.4}));stat.position.set(59,.85,35);stat.castShadow=true;world.add(stat);
     townProps.push({x:59,z:35,r:.6,top:.5,yb:0})}
@@ -4310,18 +4313,26 @@ function seaStep(dt,now,ind){
     P_.x[i]=x;P_.y[i]=y;P_.z[i]=z;const j=i*3;P_.pos[j]=cp.x+x;P_.pos[j+1]=cp.y-2+y;P_.pos[j+2]=cp.z+z}
   P_.p.geometry.attributes.position.needsUpdate=true}
 /* ----- vegetación: flores, arbustos con bayas, nenúfares y juncos ----- */
+const GRC={ms:null,rc:null,o:new T.Vector3(),d:new T.Vector3(0,-1,0)};
+function groundOK(x,z){
+  if(!GRC.ms){world.updateMatrixWorld(true);GRC.ms=[];GRC.rc=new T.Raycaster();
+    world.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.material||o.material===WX.fl||o.material.transparent||o.userData.veg||!o.visible)return;const b=new T.Box3().setFromObject(o);if(b.max.y>.015&&b.min.y<.5)GRC.ms.push([o,b])})}
+  GRC.o.set(x,.6,z);GRC.rc.set(GRC.o,GRC.d);GRC.rc.far=.6;
+  for(const [o,b] of GRC.ms){if(x<b.min.x||x>b.max.x||z<b.min.z||z>b.max.z)continue;const h=GRC.rc.intersectObject(o,false);if(h.length&&h[0].point.y>.012)return false}
+  return true}
 function inBld(x,z){for(const q of HB){if(q.x0===undefined||!q.w)continue;if(x>=q.x0-.3&&x<=q.x0+q.w+.3&&z>=q.y0-.3&&z<=q.y0+q.d+.3)return true}return false}
 function vegBuild(){
+  WINL.list=null;GRC.ms=null;
   SEA.veg=[];SEA.hedgeM=[];SEA.crowns=[];
   world.traverse(o=>{if(!o.isMesh||!o.material)return;
     if(o.material.map&&o.material.map===hedgeTex&&!SEA.hedgeM.includes(o.material))SEA.hedgeM.push(o.material);
     if(o.isInstancedMesh&&o.geometry&&o.geometry.type==='IcosahedronGeometry'&&o.instanceColor&&!o.userData.veg)SEA.crowns.push(o)});
   const rr=(a,b)=>a+Math.random()*(b-a),pal=['#ff8fb8','#ffd36e','#9fd8ff','#c8a0ff','#ffffff','#ff9d7a','#fff08a'].map(c=>new T.Color(c));
   const fl=[],lf=[],bs=[],bb=[];
-  const patch=(x,z,r0,r1,n)=>{for(let i=0;i<n;i++){const a=Math.random()*6.283,r=rr(r0,r1),px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(wxGrass(px,pz)&&!inBld(px,pz)){fl.push([px,.07+Math.random()*.05,pz,rr(.04,.065),pal[(Math.random()*pal.length)|0]]);lf.push([px,.03,pz,rr(.05,.08)])}}};
+  const patch=(x,z,r0,r1,n)=>{for(let i=0;i<n;i++){const a=Math.random()*6.283,r=rr(r0,r1),px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(wxGrass(px,pz)&&!inBld(px,pz)&&groundOK(px,pz)){fl.push([px,.07+Math.random()*.05,pz,rr(.04,.065),pal[(Math.random()*pal.length)|0]]);lf.push([px,.03,pz,rr(.05,.08)])}}};
   for(const [x,z] of treeList())patch(x,z,.42,.85,9);
   for(const [x,z] of lampList())patch(x,z,.3,.55,5);
-  for(const [x,z,o] of benchList()){for(const s of [-1,1]){const bx=o==='x'?x+s*.95:x+.45,bz=o==='x'?z+.45:z+s*.95;if(wxGrass(bx,bz)&&!inBld(bx,bz))bs.push([bx,bz,rr(.2,.3)])}}
+  for(const [x,z,o] of benchList()){for(const s of [-1,1]){const bx=o==='x'?x+s*.95:x+.45,bz=o==='x'?z+.45:z+s*.95;if(wxGrass(bx,bz)&&!inBld(bx,bz)&&groundOK(bx,bz))bs.push([bx,bz,rr(.2,.3)])}}
   const mkI=(geo,mat,n)=>{const m=new T.InstancedMesh(geo,mat,Math.max(1,n));m.frustumCulled=false;m.castShadow=false;m.userData.veg=1;world.add(m);SEA.veg.push(m);return m};
   const mm=new T.Matrix4(),q=new T.Quaternion(),pp=new T.Vector3(),ss=new T.Vector3();
   if(fl.length){const F=mkI(new T.IcosahedronGeometry(1,0),new T.MeshStandardMaterial({roughness:.7,flatShading:true}),fl.length),L=mkI(new T.ConeGeometry(1,2.2,5),new T.MeshStandardMaterial({color:0x5fb06e,roughness:.8,flatShading:true}),lf.length);
@@ -4343,7 +4354,7 @@ function vegBuild(){
     const R=mkI(new T.CylinderGeometry(.012,.018,1,5),new T.MeshStandardMaterial({color:0x7aa84a,roughness:.8}),reeds.length),T2=mkI(new T.CylinderGeometry(.03,.03,.16,6),new T.MeshStandardMaterial({color:0x7a4a2a,roughness:.8}),reeds.length);
     reeds.forEach((p,i)=>{pp.set(p[0],p[2]/2,p[1]);ss.set(1,p[2],1);mm.compose(pp,q,ss);R.setMatrixAt(i,mm);pp.set(p[0],p[2]+.02,p[1]);ss.set(1,1,1);mm.compose(pp,q,ss);T2.setMatrixAt(i,mm)});R.userData.keep=1;T2.userData.keep=1;
     wxSway(R.material,.1,.7,.06);wxSway(T2.material,.2,.8,.06)}
-  relieveBuild()}
+  GRC.ms=null;relieveBuild()}
 /* ----- relieve (mapas de relieve procedurales) ----- */
 const REL={brick:null,tile:null};
 function relCanvas(kind){const c=mkCanvas(256,256),g=c.getContext('2d');g.fillStyle='#bbb';g.fillRect(0,0,256,256);
@@ -4400,12 +4411,13 @@ function emoStart(k){
 function emoEnd(){if(!emo)return;const k=emo.k;emo=null;if(k==='sit'){P.y=floorH(P.x,P.z,0);P.gr=true}if(rig)emoReset(rig)}
 function benchNear(){
   if(emo||state!=='play'||drv||lie||act||fish||ballMode||!P.gr||P.y>.3)return null;
-  for(const [x,z,o] of benchList()){const d=Math.hypot(P.x-x,P.z-z);if(d<1.25)return {k:'sit',b:[x,z,o],label:'Sentarse'}}return null}
+  for(const [x,z,o] of benchList()){const d=Math.hypot(P.x-x,P.z-z);if(d<1.25){if(GX.sitters.some(s=>Math.hypot(s.x-x,s.z-z)<1.1))continue;return {k:'sit',b:[x,z,o],label:'Sentarse'}}}return null}
 function emoSit(b){const [x,z,o]=b;emo={k:'sit',t:0,T:1e9};P.vx=P.vz=0;
   if(o==='z'){P.x=x-.05;P.z=z;heading=Math.PI/2}else{P.x=x;P.z=z-.05;heading=0}emo.sx=P.x;emo.sz=P.z;P.y=.126;P.vy=0;P.gr=true;AU.play('lie')}
 function emoAction(){return {k:'emoact',label:emo.k==='sit'?'Levantarse':'Parar'}}
 function emoHalt(){if(emo)emoEnd()}
 function emoStep(dt,now){
+  if(state!=='play'){const b=$('emoBox');if(b&&!b.hidden)b.hidden=true}
   if(!emo)return;const sw=stickWorld();emo.t+=dt;
   if(state!=='play'||drv||lie||act||fish||(sw.mag>.5&&emo.t>.35)||emo.t>emo.T){emoEnd();return}
   P.vx=P.vz=0;if(emo.k==='sit'){P.x=emo.sx;P.z=emo.sz;P.y=.126;P.vy=0;P.gr=true}}
@@ -4433,7 +4445,7 @@ function pbFrame(dt,now){
 function emoBind(){const b=$('bEmo'),bx=$('emoBox');if(!b||!bx)return;b.onclick=()=>{bx.hidden=!bx.hidden};
   bx.querySelectorAll('[data-emo]').forEach(e=>e.onclick=()=>{bx.hidden=true;emoStart(e.dataset.emo)})}
 setTimeout(emoBind,0);
-window.__p50={treeList,benchList,lampList,SEA,seaApply,emoStart,emoSit,emoEnd,benchNear,WINL,get emo(){return emo},get doll(){return doll},swapActors,relieveApply,FOC,
+window.__p50={groundOK,GRC,pix(x,z){const F=GX_FL;return Array.from(F.orig.getContext("2d").getImageData(Math.floor(x*F.px),Math.floor(z*F.px),1,1).data)},wxGrass,treeList,benchList,lampList,SEA,seaApply,emoStart,emoSit,emoEnd,benchNear,WINL,get emo(){return emo},get doll(){return doll},swapActors,relieveApply,FOC,
   setAcc(a){doll.acc=a;swapActors()},get rig(){return rig},get REL(){return SEA.rel}};
 
 const PEERCFG={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}};
