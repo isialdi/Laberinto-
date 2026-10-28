@@ -247,7 +247,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="seg" id="introSize" role="group" aria-label="Tamaño"></div>
     </div>
     <div class="opts2" id="players" role="group" aria-label="Jugador" hidden></div>
-    <div class="vtag" id="vTag">v53</div>
+    <div class="vtag" id="vTag">v54</div>
     <div class="opts2" id="charsIO"><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button></div>
     <div class="rowp"><input class="name" id="inName" maxlength="14" placeholder="Tu nombre" autocomplete="off" autocapitalize="words" aria-label="Tu nombre"><button class="play" id="bPlay">Jugar</button></div>
     <div class="opts2"><button class="chip" id="bHost">Crear partida online</button><input class="name" id="inCode" maxlength="4" placeholder="Código" autocomplete="off" aria-label="Código de sala" style="width:96px;height:38px;text-align:center;padding:0 10px;font-size:.9rem"><button class="chip" id="bJoin">Unirse</button></div>
@@ -999,7 +999,7 @@ function lampList(){const l=[];
   [8,24,40].forEach(x=>{l.push([x,11.9]);l.push([x+8,14.1]);l.push([x,38.9]);l.push([x+8,41.1])});
   l.push([57.4,13],[60.6,13],[57.4,39],[60.6,39],[57.4,24],[57.4,29]);
   [10,20,30].forEach(x=>l.push([x,56.4]));[10,20,40,50].forEach(x=>l.push([x,61.6]));l.push([9,65],[24,65],[24,71]);return l}
-function treeList(){const t=[[3.5,26.5,1.1],[3,29.4,.55],[18,23.6,.55],[33,29.4,.55],[48,23.6,.55],[10,29.4,.55],[25,23.6,.55],[40,29.4,.55],[55,23.6,.55]];
+function treeList(){const t=[[3.5,26.5,1.1],[15,29.4,.55],[13.2,23.6,.55],[27.6,29.4,.55],[43.2,23.6,.55],[44.8,29.4,.55],[28.2,23.6,.55],[29.8,29.4,.55],[30,23.6,.55]];
   for(const [x,z] of [[58,3],[60,5],[58.5,8],[60,9.5],[57.35,44],[60.65,47],[57.35,50],[58.8,5.5]])t.push([x,z,.5+Math.random()*.2]);return t}
 function benchList(){return [[57.4,16.5,'z'],[57.4,32,'z'],[57.4,36,'z'],[60.6,16.5,'z'],[60.6,36,'z'],[8,11.5,'x'],[34,41.5,'x'],[50,11.5,'x']]}
 function buildTownProps(M){
