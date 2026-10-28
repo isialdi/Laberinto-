@@ -247,7 +247,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="seg" id="introSize" role="group" aria-label="Tamaño"></div>
     </div>
     <div class="opts2" id="players" role="group" aria-label="Jugador" hidden></div>
-    <div class="vtag" id="vTag">v50</div>
+    <div class="vtag" id="vTag">v51</div>
     <div class="opts2" id="charsIO"><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button></div>
     <div class="rowp"><input class="name" id="inName" maxlength="14" placeholder="Tu nombre" autocomplete="off" autocapitalize="words" aria-label="Tu nombre"><button class="play" id="bPlay">Jugar</button></div>
     <div class="opts2"><button class="chip" id="bHost">Crear partida online</button><input class="name" id="inCode" maxlength="4" placeholder="Código" autocomplete="off" aria-label="Código de sala" style="width:96px;height:38px;text-align:center;padding:0 10px;font-size:.9rem"><button class="chip" id="bJoin">Unirse</button></div>
@@ -3585,7 +3585,7 @@ function frame(now){
     else{ballMesh.rotation.y=spin;ballMesh.visible=true}}
   puzzleStep(dt,now);footStep(dt,now);cbStep(dt,now);worldStep(dt,now);carsStep(dt,now);southStep(dt,now);gpsStep(dt,now);garStep(dt,now);netStep(dt,now);lookStep(dt);houseVis();actFx(dt,now);AU.tick(dt,state==='play');
   updateCamera(dt,now);
-  {let tn=state==='intro'?[70,360]:P.x<TN.MX+.5?[14,64]:[7,clamp(mazeG*1.1,22,46)];if(window.__fog)tn=window.__fog;fogN+=(tn[0]-fogN)*(1-Math.exp(-dt*3));fogF+=(tn[1]-fogF)*(1-Math.exp(-dt*3));scene.fog.near=fogN;scene.fog.far=fogF}
+  {let tn=state==='intro'?[70,360]:P.x<TN.MX+.5?[260,900]:[200,700];if(window.__fog)tn=window.__fog;fogN+=(tn[0]-fogN)*(1-Math.exp(-dt*3));fogF+=(tn[1]-fogF)*(1-Math.exp(-dt*3));scene.fog.near=fogN;scene.fog.far=fogF}
   // tejados y antorchas
   const inTun=state==='play'||state==='menu'?isTun(Math.floor(P.x),Math.floor(P.z)):false;
   lightMix+=(((inTun)?0:1)-lightMix)*(1-Math.exp(-dt*5));
