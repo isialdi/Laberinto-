@@ -25,18 +25,18 @@ button:focus-visible{outline:3px solid var(--lav);outline-offset:2px}
 svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
 
 .tl{left:max(16px,env(safe-area-inset-left,0px));top:12px;display:flex;gap:8px;align-items:center}
-.tr{right:max(16px,env(safe-area-inset-right,0px));top:12px;pointer-events:none!important}
-.gbtn{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--glass);
+.tr{right:max(16px,env(safe-area-inset-right,0px));top:76px;pointer-events:none!important}
+.gbtn{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--glass);
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:var(--shadow),inset 0 0 0 1.5px var(--glass-edge);color:var(--ink);transition:transform .1s}
 .gbtn:active{transform:scale(.93)}
-.gbtn svg{width:22px;height:22px}
+.gbtn svg{width:26px;height:26px}
 .gbtn[aria-pressed="true"]{background:#fff;box-shadow:var(--shadow),inset 0 0 0 2.5px var(--ink)}
-.pill{height:46px;padding:0 14px;border-radius:23px;display:flex;align-items:center;gap:12px;background:var(--glass);
+.pill{height:56px;padding:0 13px;border-radius:28px;display:flex;align-items:center;gap:10px;background:var(--glass);
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:var(--shadow),inset 0 0 0 1.5px var(--glass-edge);
-  font-weight:800;font-size:.86rem;font-variant-numeric:tabular-nums}
-.st{display:flex;align-items:center;gap:5px}
-.st svg{width:16px;height:16px;color:var(--ink2)}
-.mm{width:118px;height:118px;border-radius:50%;box-shadow:var(--shadow),0 0 0 3px var(--glass-edge);overflow:hidden;background:var(--glass)}
+  font-weight:800;font-size:1.08rem;font-variant-numeric:tabular-nums}
+.st{display:flex;align-items:center;gap:4px}
+.st svg{width:21px;height:21px;color:var(--ink2)}
+.mm{width:128px;height:128px;border-radius:50%;box-shadow:var(--shadow),0 0 0 3px var(--glass-edge);overflow:hidden;background:var(--glass)}
 .mm canvas{width:100%;height:100%;display:block}
 .br{right:max(16px,env(safe-area-inset-right,0px));bottom:max(22px,calc(env(safe-area-inset-bottom,0px) + 10px));display:flex;flex-direction:column;align-items:flex-end;gap:14px;transform:scale(var(--cs));transform-origin:100% 100%}
 .look{right:max(16px,env(safe-area-inset-right,0px));bottom:max(22px,calc(env(safe-area-inset-bottom,0px) + 10px));width:calc(140px*var(--cs));height:calc(140px*var(--cs));touch-action:none;opacity:.7;transition:opacity .2s}
@@ -260,8 +260,8 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="opts2"><button class="chip" id="bHost">Crear partida online</button><input class="name" id="inCode" maxlength="4" placeholder="Código" autocomplete="off" aria-label="Código de sala" style="width:96px;height:38px;text-align:center;padding:0 10px;font-size:.9rem"><button class="chip" id="bJoin">Unirse</button></div>
       <div class="opts2" id="fixRooms"><span class="fixl">Salas fijas</span><button class="chip" data-room="ROSA">ROSA</button><button class="chip" data-room="LILA">LILA</button><button class="chip" data-room="NUBE">NUBE</button><button class="chip" data-room="LUNA">LUNA</button></div>
     </div>
-    <div class="opts2 foot"><button class="chip" id="bIntroRes">Resultados</button><button class="chip" id="bIntroChar">Personaje</button><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button></div>
-    <div class="vtag" id="vTag">v60</div>
+    <div class="opts2 foot"><button class="chip" id="bIntroRes">Resultados</button><button class="chip" id="bIntroChar">Personaje</button><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button><button class="chip" id="bCloud">Guardar en GitHub</button></div>
+    <div class="vtag" id="vTag">v63</div>
   </div>
 
   <div class="sheet" id="menuSheet" hidden>
@@ -379,7 +379,7 @@ if(!doll.v){if(doll.gender==='chico')Object.assign(doll,DEFAULTS.chico);doll.v=2
 (function validate(){const ok=(v,l)=>l.some(([k])=>k===v);
   if(!ok(doll.gender,GENDERS))doll.gender='chica';
   for(const [k,l] of [['style',STYLES],['top',TOPS],['bottom',BOTTOMS],['acc',ACCS]])if(!ok(doll[k],l))doll[k]=DEFAULTS[doll.gender][k];
-  for(const [k,l] of [['skin',SKIN],['hair',HAIR],['shirt',CLOTH],['pants',CLOTH],['accColor',CLOTH],['ball',CLOTH]])if(!(doll[k]>=0&&doll[k]<l.length))doll[k]=0;if(!doll.shoe||!['zapatillas','botas','sandalias','zapatos','katiuskas'].includes(doll.shoe))doll.shoe='zapatillas';if(!(doll.shoeC>=-1&&doll.shoeC<CLOTH.length))doll.shoeC=-1;if(!Array.isArray(doll.own))doll.own=[];if(!doll.cn){doll.cn=1;doll.coins=(doll.coins|0)+50}})();
+  for(const [k,l] of [['skin',SKIN],['hair',HAIR],['shirt',CLOTH],['pants',CLOTH],['accColor',CLOTH],['ball',CLOTH]])if(!(doll[k]>=0&&doll[k]<l.length))doll[k]=0;if(!doll.shoe||!['zapatillas','botas','sandalias','zapatos','katiuskas'].includes(doll.shoe))doll.shoe='zapatillas';if(!(doll.shoeC>=-1&&doll.shoeC<CLOTH.length))doll.shoeC=-1;if(!Array.isArray(doll.own))doll.own=[]})();
 const saveDoll=()=>{try{localStorage.setItem('laberinto-personaje',JSON.stringify(doll))}catch(e){}syncPlayer()};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a));
@@ -3760,7 +3760,7 @@ addEventListener('visibilitychange',()=>{if(document.hidden)saveGame()});addEven
 let lastSave=0;
 let players=lsGet('laberinto-jugadores',{}),newMode=false,introDirty=false;
 if(playerName.trim()&&!players[nameKey()]){players[nameKey()]={name:playerName.trim(),doll:{...doll}};lsSet('laberinto-jugadores',players)}
-function syncPlayer(){const n=playerName.trim();if(!n)return;players[n.toLowerCase()]={name:n,doll:{...doll}};lsSet('laberinto-jugadores',players)}
+function syncPlayer(){const n=playerName.trim();if(!n)return;doll.ts=Date.now();players[n.toLowerCase()]={name:n,doll:{...doll}};lsSet('laberinto-jugadores',players);try{ghSchedule()}catch(e){}}
 function renderPlayers(){const box=$('players');box.innerHTML='';const ks=Object.keys(players);
   for(const k of ks){const b=document.createElement('button');b.className='chip'+(!newMode&&k===nameKey()?' on':'');b.textContent=players[k].name;b.onclick=()=>selectPlayer(k);box.appendChild(b)}
   if(ks.length){const nb=document.createElement('button');nb.className='chip'+(newMode?' on':'');nb.textContent='+ Nuevo';
@@ -3776,7 +3776,7 @@ function startFromIntro(){
   lobbyOff();play();if(pendingNet)netBegin()}
 function toIntro(){resetDrive();endHide(true);if(dlg)endTalk();saveGame();$('menuSheet').hidden=true;$('hud').hidden=true;$('intro').hidden=false;state='intro';stick.x=stick.y=0;introDirty=true;lobbyOn();fishEnd();renderPlayers();bindSegs()}
 $('mPlayers').onclick=toIntro;
-if(!playerName.trim()&&Object.keys(players).length)selectPlayer(Object.keys(players)[0],true);else if(players[nameKey()])loadDoll(players[nameKey()].doll);
+
 
 renderPlayers();
 /* ---- personajes en archivo: personajes.json junto al index ---- */
@@ -3787,7 +3787,7 @@ function charsRefresh(){if(players[nameKey()])Object.assign(doll,players[nameKey
 (function(){const f=document.createElement('input');f.type='file';f.accept='.json,application/json';f.hidden=true;document.body.appendChild(f);
   f.onchange=()=>{const fl=f.files[0];f.value='';if(!fl)return;const r=new FileReader();r.onload=()=>{try{const n=charsMerge(JSON.parse(r.result),true);charsRefresh();toast(n?n+' personaje(s) cargado(s)':'No había personajes en el archivo')}catch(e){toast('Archivo no válido')}};r.readAsText(fl)};
   $('bCharsOut').onclick=charsExport;$('bCharsIn').onclick=()=>f.click()})();
-try{fetch('personajes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(o=>{if(o&&charsMerge(o,false))charsRefresh()}).catch(()=>{})}catch(e){}
+try{fetch('personajes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(o=>{if(o&&o.players&&!GH.tok)pagesMerge(o.players)}).catch(()=>{})}catch(e){}
 
 /* ===================== baño: ducha y retrete ===================== */
 let fxG=null,fxP=[],fxS=[];
@@ -4723,10 +4723,13 @@ const WD_KEYS=['top','bottom','shoe','acc'];
 let wdSnap=null;
 const wdOwn=(k,v)=>!PRICE[k+':'+v]||(doll.own||[]).includes(k+':'+v);
 const wdShop=()=>charFrom==='shop';
-function loadDoll(d){Object.assign(doll,{coins:0,own:[],shoe:'zapatillas',shoeC:-1,cn:0},d||{});if(!Array.isArray(doll.own))doll.own=[];
-  if(!doll.cn){doll.cn=1;doll.coins=(doll.coins|0)+50;try{if(playerName&&playerName.trim())syncPlayer()}catch(e){}}
+const spentOf=o=>(o||[]).reduce((a,k)=>a+(PRICE[k]||0),0);
+function ensureEcon(){if(!Array.isArray(doll.own))doll.own=[];if(doll.earned===undefined)doll.earned=(doll.coins|0)+spentOf(doll.own);
+  if(!doll.cn){doll.cn=1;doll.earned+=50;doll.coins=(doll.coins|0)+50;return true}return false}
+function loadDoll(d){Object.assign(doll,{coins:0,own:[],shoe:'zapatillas',shoeC:-1,cn:0,earned:undefined},d||{});
+  if(ensureEcon()){try{if(playerName&&playerName.trim())syncPlayer()}catch(e){}}
   try{updateHud()}catch(e){}}
-function coinAdd(n,msg){doll.coins=(doll.coins|0)+n;saveDoll();try{updateHud()}catch(e){}if(msg!==false)toast('+'+n+' monedas'+(msg?' · '+msg:''))}
+function coinAdd(n,msg){doll.coins=(doll.coins|0)+n;doll.earned=(doll.earned|0)+n;saveDoll();try{updateHud()}catch(e){}if(msg!==false)toast('+'+n+' monedas'+(msg?' · '+msg:''))}
 function raceReward(pl,rec){const n=[100,60,35,15][Math.min(3,pl-1)]+(rec?20:0);coinAdd(n,pl===1?'¡victoria!':pl+'º puesto');return n}
 function wdPending(){return WD_KEYS.filter(k=>!wdOwn(k,doll[k])).map(k=>k+':'+doll[k])}
 function wdBlock(key,v){if(!PRICE[key+':'+v]||wdOwn(key,v))return false;if(wdShop())return false;toast('Se compra en la tienda de ropa (Modista Vera)');return true}
@@ -4818,6 +4821,82 @@ function accNew(ac,hg,bodyG,acc,tw,rig){
     const h=P2(new T.TorusGeometry(.078,.0085,10,32),acc,{pos:[0,.235,-.012],rot:[Math.PI/2-.12,0,0],metal:.5,rough:.25,outline:false});
     h.material=h.material.clone();h.material.emissive=new T.Color(acc);h.material.emissiveIntensity=.55;hg.add(h);rig.halo=h}
 }
+
+if(Object.keys(players).length&&!playerName.trim())selectPlayer(Object.keys(players)[0],true);else if(players[nameKey()])loadDoll(players[nameKey()].doll);
+ensureEcon();
+
+/* ---------- sincronización de personajes con GitHub (personajes.json) ---------- */
+function ghGuessRepo(){const m=location.hostname.match(/^([^.]+)\.github\.io$/);if(m){const r=location.pathname.split('/')[1];if(r)return m[1]+'/'+r}return 'isialdi/Laberinto-'}
+const GH={tok:'',repo:'',path:'personajes.json',busy:0,dirty:0,timer:0,msg:''};
+try{GH.tok=localStorage.getItem('laberinto-gh')||'';GH.repo=localStorage.getItem('laberinto-ghrepo')||ghGuessRepo()}catch(e){GH.repo=ghGuessRepo()}
+const b64e=s=>btoa(unescape(encodeURIComponent(s))),b64d=s=>decodeURIComponent(escape(atob(String(s).replace(/\s/g,''))));
+const canon=o=>Array.isArray(o)?'['+o.map(canon).join(',')+']':(o&&typeof o==='object')?'{'+Object.keys(o).sort().filter(k=>o[k]!==undefined).map(k=>JSON.stringify(k)+':'+canon(o[k])).join(',')+'}':JSON.stringify(o);
+const earnedOf=d=>d.earned!==undefined?(d.earned|0):((d.coins|0)+spentOf(d.own));
+function dollMerge(a,b){
+  const newA=(a.ts|0)>=(b.ts|0),n=newA?a:b,o=newA?b:a,m={...o,...n};
+  m.own=[...new Set([...(a.own||[]),...(b.own||[])])];
+  m.earned=Math.max(earnedOf(a),earnedOf(b));m.coins=Math.max(0,m.earned-spentOf(m.own));
+  m.cn=(a.cn||b.cn)?1:0;if(!m.cn){m.earned=Math.max(0,m.earned);}
+  return m}
+function playersMerge(remote){
+  let chL=false,chR=false;const out={};
+  for(const k of new Set([...Object.keys(players),...Object.keys(remote||{})])){
+    const a=players[k],b=remote&&remote[k];
+    if(b&&(!b.doll||!b.name)){if(a)out[k]=a;continue}
+    if(a&&!b){out[k]=a;chR=true}
+    else if(!a&&b){out[k]={name:String(b.name).slice(0,14),doll:b.doll};chL=true}
+    else{const m=dollMerge(a.doll,b.doll),cm=canon(m);out[k]={name:a.name||b.name,doll:m};if(cm!==canon(a.doll))chL=true;if(cm!==canon(b.doll))chR=true}}
+  return {out,chL,chR}}
+function ghApply(out){for(const k in out)players[k]=out[k];lsSet('laberinto-jugadores',players);
+  try{if(players[nameKey()]){Object.assign(doll,players[nameKey()].doll);ensureEcon();updateHud()}swapActors();renderPlayers()}catch(e){}}
+function ghStatus(t){GH.msg=t;const e=document.getElementById('cloudStat');if(e)e.textContent=t}
+function ghSchedule(ms){if(!GH.tok)return;clearTimeout(GH.timer);GH.timer=setTimeout(()=>ghSync(),ms||6000)}
+async function ghSync(manual){
+  if(!GH.tok){if(manual)ghStatus('Falta el token de GitHub');return}
+  if(GH.busy){GH.dirty=1;return}
+  GH.busy=1;const url='https://api.github.com/repos/'+GH.repo+'/contents/'+GH.path,
+    H={Authorization:'Bearer '+GH.tok,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  try{
+    for(let t=0;t<3;t++){
+      const r=await fetch(url+'?t='+Date.now(),{headers:H,cache:'no-store'});let remote=null,sha=null;
+      if(r.status===200){const j=await r.json();sha=j.sha;try{remote=JSON.parse(b64d(j.content)).players}catch(e){remote=null}}
+      else if(r.status===401||r.status===403)throw new Error(r.status===401?'token no válido':'sin permiso (el token necesita Contents: Read and write)');
+      else if(r.status!==404)throw new Error('GitHub respondió '+r.status);
+      const {out,chL,chR}=playersMerge(remote||{});
+      if(chL)ghApply(out);
+      if(chR||sha===null){
+        const body={message:'Actualizar personajes',content:b64e(JSON.stringify({v:2,updated:new Date().toISOString(),players:out},null,1))};if(sha)body.sha=sha;
+        const p=await fetch(url,{method:'PUT',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(p.status===409||p.status===422)continue;
+        if(p.status===404)throw new Error('repositorio no encontrado ('+GH.repo+')');
+        if(p.status===401||p.status===403)throw new Error('sin permiso para escribir');
+        if(!p.ok)throw new Error('al guardar: '+p.status)}
+      ghStatus('Sincronizado a las '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));break}
+  }catch(e){ghStatus('Error: '+(e&&e.message||e));if(manual)toast('No se pudo sincronizar')}
+  GH.busy=0;if(GH.dirty){GH.dirty=0;ghSchedule(2500)}}
+// lectura sin token (solo para recibir datos desde el repositorio publicado)
+function pagesMerge(remote){const r=playersMerge(remote);if(r.chL)ghApply(r.out);return r.chL}
+(function cloudUi(){
+  const el=(h)=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
+  const sh=el(`<div class="sheet" id="cloudSheet" hidden><div class="card" role="dialog" aria-label="Guardar en GitHub"><div class="grab"></div><h2>Guardar en GitHub</h2>
+    <p class="help2">Guarda tus monedas, ropa y personajes en <b>personajes.json</b> del repositorio, para no perderlos. Crea en GitHub un <i>token</i> (Settings → Developer settings → Fine-grained tokens) solo para este repositorio con permiso <i>Contents: Read and write</i> y pégalo aquí. El token se queda solo en este dispositivo. Ojo: el archivo del repositorio es público.</p>
+    <div><div class="lab">Repositorio (usuario/nombre)</div><input class="name" id="ghRepo" style="width:100%" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <div><div class="lab">Token de GitHub</div><input class="name" id="ghTok" type="password" style="width:100%" autocomplete="off" placeholder="github_pat_…"></div>
+    <div class="help2" id="cloudStat"></div>
+    <button class="act go" id="ghSave">Guardar y sincronizar</button><button class="act" id="ghNow">Sincronizar ahora</button><button class="act" id="ghOff">Quitar token de este dispositivo</button><button class="act" id="ghClose">Cerrar</button></div></div>`);
+  document.getElementById('app')?document.getElementById('app').appendChild(sh):document.body.appendChild(sh);
+  const $$=id=>document.getElementById(id);
+  const open=()=>{$$('ghRepo').value=GH.repo;$$('ghTok').value=GH.tok?'••••••••••••':'';ghStatus(GH.msg||(GH.tok?'Token guardado en este dispositivo':'Sin token: los datos solo se guardan en este dispositivo'));sh.hidden=false};
+  $$('bCloud').onclick=open;$$('ghClose').onclick=()=>{sh.hidden=true};
+  $$('ghSave').onclick=()=>{const t=$$('ghTok').value.trim(),r=$$('ghRepo').value.trim();if(r&&/^[\w.-]+\/[\w.-]+$/.test(r)){GH.repo=r;try{localStorage.setItem('laberinto-ghrepo',r)}catch(e){}}else{ghStatus('Repositorio no válido (usuario/nombre)');return}
+    if(t&&!/^•+$/.test(t)){GH.tok=t;try{localStorage.setItem('laberinto-gh',t)}catch(e){}$$('ghTok').value='••••••••••••'}
+    ghSync(true)};
+  $$('ghNow').onclick=()=>ghSync(true);
+  $$('ghOff').onclick=()=>{GH.tok='';try{localStorage.removeItem('laberinto-gh')}catch(e){}$$('ghTok').value='';ghStatus('Token quitado de este dispositivo')};
+  sh.addEventListener('pointerdown',e=>{if(e.target===sh)sh.hidden=true});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&GH.tok)ghSync()});
+  if(GH.tok)setTimeout(()=>ghSync(),1800);
+})();
 
 const PEERCFG={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}};
 let rj=null;
