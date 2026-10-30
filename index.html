@@ -261,7 +261,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="opts2" id="fixRooms"><span class="fixl">Salas fijas</span><button class="chip" data-room="ROSA">ROSA</button><button class="chip" data-room="LILA">LILA</button><button class="chip" data-room="NUBE">NUBE</button><button class="chip" data-room="LUNA">LUNA</button></div>
     </div>
     <div class="opts2 foot"><button class="chip" id="bIntroRes">Resultados</button><button class="chip" id="bIntroChar">Personaje</button><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button><button class="chip" id="bCloud">Guardar en GitHub</button></div>
-    <div class="vtag" id="vTag">v63</div>
+    <div class="vtag" id="vTag">v64</div>
   </div>
 
   <div class="sheet" id="menuSheet" hidden>
@@ -4719,13 +4719,15 @@ const PRICE={'top:jersey':40,'top:polo':30,'top:chaleco':30,'top:vestido':60,
   'bottom:bermuda':25,'bottom:pirata':30,'bottom:minifalda':30,'bottom:larga':45,
   'shoe:botas':40,'shoe:sandalias':25,'shoe:zapatos':35,'shoe:katiuskas':30,
   'acc:sombrero':35,'acc:cinta':15,'acc:bufanda':25,'acc:orejas':40,'acc:auriculares':45,'acc:collar':20,'acc:pajarita':20,'acc:bigote':15,'acc:antenas':30,'acc:aureola':60};
+Object.assign(PRICE,{'top:camiseta':20,'bottom:corto':20,'acc:gorra':25,'acc:corona':60,'acc:flor':15,'acc:gafas':25,'acc:gorro':30,'acc:capa':50,'acc:alas':70});
 const WD_KEYS=['top','bottom','shoe','acc'];
 let wdSnap=null;
 const wdOwn=(k,v)=>!PRICE[k+':'+v]||(doll.own||[]).includes(k+':'+v);
 const wdShop=()=>charFrom==='shop';
 const spentOf=o=>(o||[]).reduce((a,k)=>a+(PRICE[k]||0),0);
-function ensureEcon(){if(!Array.isArray(doll.own))doll.own=[];if(doll.earned===undefined)doll.earned=(doll.coins|0)+spentOf(doll.own);
-  if(!doll.cn){doll.cn=1;doll.earned+=50;doll.coins=(doll.coins|0)+50;return true}return false}
+function ensureEcon(){let ch=false;if(!Array.isArray(doll.own))doll.own=[];if(doll.earned===undefined)doll.earned=(doll.coins|0)+spentOf(doll.own);
+  if(!doll.gf){doll.gf=1;ch=true;for(const k of WD_KEYS){const id=k+':'+doll[k];if(PRICE[id]&&!doll.own.includes(id)){doll.own.push(id);doll.earned+=PRICE[id]}}}
+  if(!doll.cn){doll.cn=1;doll.earned+=50;doll.coins=(doll.coins|0)+50;ch=true}return ch}
 function loadDoll(d){Object.assign(doll,{coins:0,own:[],shoe:'zapatillas',shoeC:-1,cn:0,earned:undefined},d||{});
   if(ensureEcon()){try{if(playerName&&playerName.trim())syncPlayer()}catch(e){}}
   try{updateHud()}catch(e){}}
@@ -4744,6 +4746,13 @@ function wdHead(box){
   const h=document.createElement('div');h.className='wdhead';
   h.innerHTML=`<div class="wdc"><i class="cpi"></i><b>${doll.coins|0}</b><span>monedas</span></div>`+(wdShop()?'<div class="wdhint">Probador de Modista Vera: toca una prenda para probártela. Las que tienen precio hay que comprarlas.</div>':'<div class="wdhint">Gana monedas ganando carreras y compra ropa en la tienda.</div>');
   box.appendChild(h);
+  {const bag=document.createElement('div');bag.className='wdbag';const nm={top:TOPS,bottom:BOTTOMS,shoe:SHOES,acc:ACCS};
+    const own=(doll.own||[]).filter(id=>PRICE[id]);
+    bag.innerHTML='<div class="lab">Mi mochila</div>';const c=document.createElement('div');c.className='chips';
+    if(!own.length){const e=document.createElement('div');e.className='wdhint';e.textContent='Vacía. Lo que compres en la tienda de ropa se guarda aquí y podrás ponértelo cuando quieras.';c.appendChild(e)}
+    own.forEach(id=>{const [k,v]=id.split(':');const it=(nm[k]||[]).find(x=>x[0]===v);if(!it)return;const b=document.createElement('button');b.textContent=it[1];b.setAttribute('aria-pressed',doll[k]===v);
+      b.onclick=()=>{doll[k]=v;if(!wdPreview())saveDoll();swapActors();buildCharOpts()};c.appendChild(b)});
+    bag.appendChild(c);box.appendChild(bag)}
   if(wdShop()){const p=wdPending();if(p.length){const tot=p.reduce((a,k)=>a+PRICE[k],0),b=document.createElement('div');b.className='wdbuy';
     b.innerHTML=`<span>${p.length} prenda${p.length>1?'s':''} sin comprar</span>`;const bt=document.createElement('button');bt.className='act go';bt.innerHTML=`Comprar · ${tot}<i class="cpi"></i>`;bt.onclick=wdBuy;b.appendChild(bt);box.appendChild(b)}}}
 function openShop(){openChar('shop')}
