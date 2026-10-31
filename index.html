@@ -263,7 +263,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="opts2" id="fixRooms"><span class="fixl">Salas fijas</span><button class="chip" data-room="ROSA">ROSA</button><button class="chip" data-room="LILA">LILA</button><button class="chip" data-room="NUBE">NUBE</button><button class="chip" data-room="LUNA">LUNA</button></div>
     </div>
     <div class="opts2 foot"><button class="chip" id="bIntroRes">Resultados</button><button class="chip" id="bIntroChar">Personaje</button><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button><button class="chip" id="bCloud">Guardar en GitHub</button></div>
-    <div class="vtag" id="vTag">v65</div>
+    <div class="vtag" id="vTag">v68</div>
   </div>
 
   <div class="sheet" id="menuSheet" hidden>
@@ -2116,12 +2116,12 @@ const _bm=new T.Matrix4(),_bq=new T.Quaternion(),_bp=new T.Vector3(),_bs=new T.V
 function bPut(i,x,y,z,sx,sz,h){_be.set(0,h||0,0);_bq.setFromEuler(_be);_bp.set(x,y+.012,z);_bs.set(sx,1,sz);_bm.compose(_bp,_bq,_bs);GX.blob.setMatrixAt(i,_bm)}
 /* ----- marco ----- */
 const gSm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
-const GDAY=600;
+const GDAY=1800;
 function gfxFrame(dt,now){
   if(state==='char'||!world)return;
   GX.time+=dt;
   // --- hora del día
-  const tt=GFX.ciclo?(.32+GX.time/GDAY)%1:.375,s=GFX.ciclo?Math.sin((tt-.25)*Math.PI*2):.8;
+  const tt=GFX.ciclo?(.32+(typeof net!=='undefined'&&net&&net.code?Date.now()/1000:GX.time)/GDAY)%1:.375,s=GFX.ciclo?Math.sin((tt-.25)*Math.PI*2):.8;
   const nightT=gSm(.05,-.7,s),sunT=Math.exp(-Math.pow((s-.05)/.2,2));
   const fx=Math.floor(P.x),fz=Math.floor(P.z),bb=P.x<TN.MX?bAt(fx,fz):houseAt(fx,fz),inB=bb?1:(P.x>=TN.MX?.45:0);
   GX.indoor+=(inB-GX.indoor)*(1-Math.exp(-dt*3));
@@ -4328,12 +4328,13 @@ function wxBuild(){
   for(const c of cars)if(c.mesh&&!c.wip)try{wiperAdd(c,c.mesh,(c.model|0)%6)}catch(e){}
   try{vegBuild();seaApply()}catch(e){console.warn('veg',e)}}
 /* ----- marco ----- */
+function roomWx(code,ms){const sl=Math.floor(ms/110000);let h=2166136261;const s=code+':'+sl;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}h=(h^(h>>>15))>>>0;const u=(h%1000)/1000;return u<.55?'clear':u<.84?'rain':'storm'}
 function wxFrame(dt,now){
   const nF=GX.nightF,sS=GX.sunset,ind=GX.indoor;
   WXU.t.value=now/1000;if(!GFX.ciclo)sun.intensity=.92;
   // --- qué tiempo hace
-  let m=WX.mode;
-  if(m==='auto'){WX.autoT-=dt;if(WX.autoT<=0){const q=Math.random();WX.auto=WX.auto!=='clear'?'clear':(q<.62?'rain':'storm');WX.autoT=WX.auto==='clear'?150+Math.random()*210:70+Math.random()*130}m=WX.auto}
+  let m=WX.mode;const inRoom=typeof net!=='undefined'&&net&&net.code;if(inRoom)m=roomWx(net.code,Date.now());
+  if(!inRoom&&m==='auto'){WX.autoT-=dt;if(WX.autoT<=0){const q=Math.random();WX.auto=WX.auto!=='clear'?'clear':(q<.62?'rain':'storm');WX.autoT=WX.auto==='clear'?150+Math.random()*210:70+Math.random()*130}m=WX.auto}
   if(m!==WX.lastM){if(state==='play')toast(m==='rain'?'Empieza a llover…':m==='storm'?'Se acerca una tormenta...':'Vuelve a salir el sol');WX.lastM=m}
   const tr=m==='clear'?0:m==='rain'?.72:1,tc=m==='clear'?0:m==='rain'?.7:1,k=1-Math.exp(-dt*.35);
   WX.r+=(tr-WX.r)*k;WX.cl+=(tc-WX.cl)*k;
