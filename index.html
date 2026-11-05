@@ -194,7 +194,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
 #app.uifx .seg button[aria-pressed="true"]{box-shadow:0 2px 8px rgba(75,61,99,.3)}
 .vtag{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:max(10px,env(safe-area-inset-bottom,0px));font-weight:800;font-size:.8rem;letter-spacing:.06em;color:var(--ink2);background:var(--glass);padding:3px 10px;border-radius:999px;pointer-events:none;box-shadow:0 1px 4px rgba(75,61,99,.15)}
 .fixl{align-self:center;font-weight:800;font-size:.8rem;letter-spacing:.05em;color:var(--ink2)}
-#bVoz.on{background:#c9f0d5!important}#bVoz.mute{background:#f9d0d8!important}#bVoz.talk{box-shadow:0 0 0 4px rgba(76,195,138,.75),var(--shadow)}#vzPill{position:fixed;left:16px;top:112px;z-index:30;padding:7px 14px;border-radius:18px;background:rgba(75,61,99,.86);color:#fff;font:800 .95rem var(--body);pointer-events:none}
+#bVoz,#bVozX{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}#vzPill.bad{background:rgba(190,60,90,.92)}#bVoz.on{background:#c9f0d5!important}#bVoz.mute{background:#f9d0d8!important}#bVoz.talk{box-shadow:0 0 0 4px rgba(76,195,138,.75),var(--shadow)}#vzPill{position:fixed;left:16px;top:112px;z-index:30;padding:7px 14px;border-radius:18px;background:rgba(75,61,99,.86);color:#fff;font:800 .95rem var(--body);pointer-events:none}
 .cpi{display:inline-block;width:.95em;height:.95em;border-radius:50%;background:#f7c600;box-shadow:inset 0 0 0 2px #d9a400,inset 0 -2px 0 #e0a800;vertical-align:-.12em;margin-left:5px}
 .cprice{font-style:normal;margin-left:7px;padding:1px 7px 1px 6px;border-radius:9px;background:rgba(255,255,255,.65);font-size:.8rem;color:#8a6200}.cprice::after{content:'';display:inline-block;width:.75em;height:.75em;border-radius:50%;background:#f7c600;box-shadow:inset 0 0 0 1.5px #d9a400;margin-left:3px;vertical-align:-.08em}
 .chips button.lk{opacity:.82;border:1.5px dashed #d9a400}
@@ -234,6 +234,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
         <button class="gbtn" id="bView" aria-label="Cambiar de vista"><svg viewBox="0 0 24 24"><path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="gbtn" id="bCenter" aria-label="Centrar la cámara detrás"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
         <button class="gbtn" id="bVoz" aria-label="Chat de voz" hidden><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path class="sl" d="M4 4l16 16" style="display:none;stroke:#d23a5a"/></svg></button>
+        <button class="gbtn" id="bVozX" aria-label="Salir de la voz" hidden><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         <button class="gbtn" id="bChat" aria-label="Chat"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H10l-5 4v-4H4z"/></svg><span class="cdot" id="chatDot" hidden></span></button>
         <button class="gbtn" id="bEmo" aria-label="Gestos y emociones"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14c1 2 2.2 3 4 3s3-1 4-3M9 9.5h.01M15 9.5h.01"/></svg></button>
         <button class="gbtn gps" id="bGps" aria-label="GPS: elegir un sitio"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
@@ -265,7 +266,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="opts2" id="fixRooms"><span class="fixl">Salas fijas</span><button class="chip" data-room="ROSA">ROSA</button><button class="chip" data-room="LILA">LILA</button><button class="chip" data-room="NUBE">NUBE</button><button class="chip" data-room="LUNA">LUNA</button></div>
     </div>
     <div class="opts2 foot"><button class="chip" id="bIntroRes">Resultados</button><button class="chip" id="bIntroChar">Personaje</button><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button><button class="chip" id="bCloud">Guardar en GitHub</button></div>
-    <div class="vtag" id="vTag">v69</div>
+    <div class="vtag" id="vTag">v70</div>
   </div>
 
   <div class="sheet" id="menuSheet" hidden>
@@ -4913,29 +4914,31 @@ function pagesMerge(remote){const r=playersMerge(remote);if(r.chL)ghApply(r.out)
 })();
 
 /* ---------- chat de voz: WebRTC entre los jugadores de la sala; la señalización viaja por la propia sala ---------- */
-const VZ={on:false,mute:false,want:false,stream:null,pcs:new Map(),au:new Map(),an:new Map(),ac:null,talk:new Set(),busy:false};
+const VZ={on:false,mute:true,ptt:false,want:false,stream:null,pcs:new Map(),au:new Map(),an:new Map(),gn:new Map(),ac:null,talk:new Set(),busy:false,st:new Map(),blocked:false};
 const vzMe=()=>net?netId():null;
 const vzIce=()=>{try{return PEERCFG.config.iceServers}catch(e){return [{urls:'stun:stun.l.google.com:19302'}]}};
 function vzSend(o){if(!net)return;o.t='vz';o.id=vzMe();try{netSend(o)}catch(e){}}
-function vzBtn(){const b=$('bVoz');if(!b)return;b.hidden=!net;b.classList.toggle('on',VZ.on&&!VZ.mute);b.classList.toggle('mute',VZ.on&&VZ.mute);
-  b.setAttribute('aria-pressed',VZ.on);b.querySelector('.sl').style.display=(VZ.on&&VZ.mute)?'block':'none'}
+function vzBtn(){const b=$('bVoz');if(!b)return;b.hidden=!net;b.classList.toggle('on',VZ.on&&VZ.ptt);b.classList.toggle('mute',VZ.on&&!VZ.ptt);
+  b.setAttribute('aria-pressed',VZ.on&&VZ.ptt);b.querySelector('.sl').style.display=(VZ.on&&!VZ.stream)?'block':'none';const x=$('bVozX');if(x)x.hidden=!(net&&VZ.on)}
 function vzAC(){try{if(!VZ.ac)VZ.ac=new (window.AudioContext||window.webkitAudioContext)();if(VZ.ac.state==='suspended')VZ.ac.resume()}catch(e){}}
-function vzWatch(id,stream){try{vzAC();if(!VZ.ac)return;const src=VZ.ac.createMediaStreamSource(stream),an=VZ.ac.createAnalyser();an.fftSize=512;src.connect(an);VZ.an.set(id,{an,buf:new Uint8Array(an.fftSize),src})}catch(e){}}
+function vzWatch(id,stream,play){try{vzAC();if(!VZ.ac)return;const src=VZ.ac.createMediaStreamSource(stream),an=VZ.ac.createAnalyser();an.fftSize=512;src.connect(an);
+  if(play){const g=VZ.ac.createGain();g.gain.value=1.6;src.connect(g);g.connect(VZ.ac.destination);VZ.gn.set(id,g)}
+  VZ.an.set(id,{an,buf:new Uint8Array(an.fftSize),src})}catch(e){}}
 function vzLevel(o){o.an.getByteTimeDomainData(o.buf);let m=0;for(let i=0;i<o.buf.length;i++){const v=Math.abs(o.buf[i]-128);if(v>m)m=v}return m/128}
 function vzPc(id){
-  let e=VZ.pcs.get(id);if(e)return e.pc;
+  let e=VZ.pcs.get(id);if(e)return e.pc;VZ.st.set(id,'connecting');setTimeout(()=>{const q=VZ.pcs.get(id);if(q&&VZ.on&&net&&q.pc.connectionState!=='connected'){VZ.st.set(id,'failed');vzPill();if(!q.retry){q.retry=1;vzDrop(id);vzSend({k:'hi'})}}},16000);
   const pc=new RTCPeerConnection({iceServers:vzIce()});e={pc,pend:[],rd:false};VZ.pcs.set(id,e);
   if(VZ.stream){for(const t of VZ.stream.getTracks())pc.addTrack(t,VZ.stream)}else pc.addTransceiver('audio',{direction:'recvonly'});
   pc.onicecandidate=ev=>{if(ev.candidate)vzSend({k:'ice',to:id,c:ev.candidate.toJSON?ev.candidate.toJSON():ev.candidate})};
-  pc.ontrack=ev=>{const st=ev.streams[0]||new MediaStream([ev.track]);let a=VZ.au.get(id);if(!a){a=new Audio();a.autoplay=true;a.playsInline=true;VZ.au.set(id,a)}
-    a.srcObject=st;const p=a.play();if(p&&p.catch)p.catch(()=>{});vzWatch(id,st)};
-  pc.onconnectionstatechange=()=>{const s=pc.connectionState;
+  pc.ontrack=ev=>{const st=ev.streams[0]||new MediaStream([ev.track]);let a=VZ.au.get(id);if(!a){a=new Audio();a.autoplay=true;a.playsInline=true;a.muted=true;VZ.au.set(id,a)}
+    a.srcObject=st;const p=a.play();if(p&&p.catch)p.catch(()=>{});vzAC();if(VZ.ac&&VZ.ac.state!=='running'){VZ.blocked=true;vzPill()}vzWatch(id,st,true)};
+  pc.onconnectionstatechange=()=>{const s=pc.connectionState;VZ.st.set(id,s);vzPill();
     if(s==='failed'||s==='closed'){vzDrop(id);if(s==='failed'&&VZ.on&&net&&remotes.has(id))setTimeout(()=>{if(VZ.on&&net&&!VZ.pcs.has(id))vzSend({k:'hi'})},3000)}};
   return pc}
 async function vzOffer(id){const pc=vzPc(id);try{const o=await pc.createOffer();await pc.setLocalDescription(o);vzSend({k:'off',to:id,s:pc.localDescription.sdp})}catch(e){console.warn('vz offer',e)}}
 function vzDrop(id){const e=VZ.pcs.get(id);if(e){VZ.pcs.delete(id);try{e.pc.ontrack=e.pc.onicecandidate=e.pc.onconnectionstatechange=null;e.pc.close()}catch(x){}}
   const a=VZ.au.get(id);if(a){try{a.pause();a.srcObject=null}catch(x){}VZ.au.delete(id)}
-  const o=VZ.an.get(id);if(o){try{o.src.disconnect()}catch(x){}VZ.an.delete(id)}VZ.talk.delete(id)}
+  const o=VZ.an.get(id);if(o){try{o.src.disconnect()}catch(x){}VZ.an.delete(id)}VZ.gn.delete(id);VZ.st.delete(id);VZ.talk.delete(id)}
 async function vzApply(m){
   if(!VZ.on||!net||m.id===vzMe())return;if(m.to&&m.to!==vzMe())return;const id=m.id;if(!id)return;
   if(m.k==='hi'||m.k==='yo'){if(m.k==='hi'){vzDrop(id);vzSend({k:'yo',to:id})}if(vzMe()<id){if(m.k==='hi'||!VZ.pcs.has(id))await vzOffer(id)}else if(!VZ.pcs.has(id))vzPc(id)}
@@ -4952,10 +4955,10 @@ async function vzJoin(auto){
     VZ.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false})}
   catch(e){VZ.stream=null;listen=true}
   VZ.busy=false;if(!net){if(VZ.stream)for(const t of VZ.stream.getTracks())t.stop();VZ.stream=null;return}
-  VZ.on=true;VZ.want=true;VZ.mute=!!(auto&&VZ.mute&&VZ.stream);if(VZ.stream)for(const t of VZ.stream.getAudioTracks())t.enabled=!VZ.mute;
+  VZ.on=true;VZ.want=true;VZ.ptt=false;VZ.mute=true;if(VZ.stream)for(const t of VZ.stream.getAudioTracks())t.enabled=false;
   if(VZ.stream)vzWatch('me',VZ.stream);
   vzBtn();vzSend({k:'hi'});
-  toast(listen?'Sin micrófono: solo escuchas a los demás':auto?'Voz reconectada':'Voz activada · toca para silenciar · mantén pulsado para salir')}
+  toast(listen?'Sin micrófono: solo escuchas a los demás':auto?'Voz reconectada · mantén pulsado el botón para hablar':'Voz activada · mantén pulsado el botón para hablar')}
 function vzStop(quiet){
   if(VZ.on&&net)vzSend({k:'bye'});
   for(const id of [...VZ.pcs.keys()])vzDrop(id);
@@ -4963,22 +4966,35 @@ function vzStop(quiet){
   const o=VZ.an.get('me');if(o){try{o.src.disconnect()}catch(x){}VZ.an.delete('me')}
   VZ.on=false;VZ.talk.clear();vzBtn();vzPill()}
 function vzLeave(){VZ.want=false;vzStop();toast('Has salido de la voz')}
-function vzToggleMute(){if(!VZ.on)return vzJoin();VZ.mute=!VZ.mute;if(VZ.stream)for(const t of VZ.stream.getAudioTracks())t.enabled=!VZ.mute;
-  if(!VZ.stream&&!VZ.mute){VZ.on=false;vzStop();vzJoin();return}
-  vzBtn();toast(VZ.mute?'Micrófono silenciado':'Micrófono activado')}
+function vzTalk(on){if(!VZ.on)return;on=!!on&&!!VZ.stream;if(on===VZ.ptt)return;VZ.ptt=on;VZ.mute=!on;
+  if(VZ.stream)for(const t of VZ.stream.getAudioTracks())t.enabled=on;
+  if(on){vzAC();for(const a of VZ.au.values())if(a.paused)a.play().catch(()=>{})}
+  vzBtn();vzPill()}
 function vzPill(){let p=$('vzPill');if(!p){p=document.createElement('div');p.id='vzPill';p.hidden=true;document.body.appendChild(p)}
-  const nm=[];for(const id of VZ.talk){if(id==='me')nm.push('Tú');else{const r=remotes.get(id);nm.push(r?r.name:'Jugador')}}
-  p.hidden=!nm.length;p.textContent='Hablando: '+nm.slice(0,3).join(', ');
-  const b=$('bVoz');if(b)b.classList.toggle('talk',VZ.talk.has('me'))}
+  const nm=[];for(const id of VZ.talk){if(id==='me')continue;const r=remotes.get(id);nm.push(r?r.name:'Jugador')}
+  const nameOf=id=>{const r=remotes.get(id);return r?r.name:'Jugador'};
+  let t='',bad=false;
+  if(VZ.ptt)t='Estás hablando…';
+  else if(nm.length)t='Hablando: '+nm.slice(0,3).join(', ');
+  else if(VZ.on){const w=[...VZ.st].filter(([k,v])=>v!=='connected');
+    if(VZ.blocked&&VZ.ac&&VZ.ac.state!=='running'){t='Toca la pantalla para activar el sonido';bad=true}
+    else if(w.length){const f=w.filter(([k,v])=>v==='failed'||v==='disconnected');t=f.length?'Sin conexión de voz con '+nameOf(f[0][0])+' (prueba otra red)':'Conectando voz con '+nameOf(w[0][0])+'…';bad=!!f.length}}
+  p.hidden=!t;p.textContent=t;p.classList.toggle('bad',bad);
+  const b=$('bVoz');if(b)b.classList.toggle('talk',VZ.ptt)}
 setInterval(()=>{if(!VZ.on){if(VZ.talk.size){VZ.talk.clear();vzPill()}return}
-  let ch=false;for(const [id,o] of VZ.an){let on=vzLevel(o)>.06;if(id==='me'&&VZ.mute)on=false;if(on!==VZ.talk.has(id)){on?VZ.talk.add(id):VZ.talk.delete(id);ch=true}}
+  let ch=false;for(const [id,o] of VZ.an){let on=vzLevel(o)>.06;if(id==='me')on=false;if(on!==VZ.talk.has(id)){on?VZ.talk.add(id):VZ.talk.delete(id);ch=true}}
   if(ch)vzPill()},180);
-setInterval(vzBtn,1500);
-addEventListener('pointerdown',()=>{if(VZ.on){vzAC();for(const a of VZ.au.values())if(a.paused)a.play().catch(()=>{})}},{passive:true});
-(function(){const b=$('bVoz');if(!b)return;let t=0,lp=false;
-  b.addEventListener('pointerdown',()=>{lp=false;clearTimeout(t);t=setTimeout(()=>{lp=true;if(VZ.on)vzLeave()},700)});
-  b.addEventListener('pointerup',()=>clearTimeout(t));b.addEventListener('pointerleave',()=>clearTimeout(t));b.addEventListener('pointercancel',()=>clearTimeout(t));
-  b.addEventListener('click',()=>{if(lp){lp=false;return}vzToggleMute()});vzBtn()})();
+setInterval(()=>{vzBtn();if(VZ.on)vzPill()},1500);
+addEventListener('pointerdown',()=>{if(VZ.on){vzAC();if(VZ.ac&&VZ.ac.state==='running'&&VZ.blocked){VZ.blocked=false;vzPill()}for(const a of VZ.au.values())if(a.paused)a.play().catch(()=>{})}},{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)vzTalk(false)});
+(function(){const b=$('bVoz');if(!b)return;let held=false;
+  const down=e=>{e.preventDefault();held=true;try{b.setPointerCapture(e.pointerId)}catch(x){}
+    if(!VZ.on){vzJoin().then(()=>{if(held&&VZ.on)vzTalk(true)});return}
+    vzTalk(true)};
+  const up=()=>{held=false;vzTalk(false)};
+  b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+  const x=$('bVozX');if(x)x.addEventListener('click',()=>{if(VZ.on)vzLeave()});vzBtn()})();
 
 const PEERCFG={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}};
 let rj=null;
