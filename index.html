@@ -266,7 +266,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="opts2" id="fixRooms"><span class="fixl">Salas fijas</span><button class="chip" data-room="ROSA">ROSA</button><button class="chip" data-room="LILA">LILA</button><button class="chip" data-room="NUBE">NUBE</button><button class="chip" data-room="LUNA">LUNA</button></div>
     </div>
     <div class="opts2 foot"><button class="chip" id="bIntroRes">Resultados</button><button class="chip" id="bIntroChar">Personaje</button><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button><button class="chip" id="bCloud">Guardar en GitHub</button></div>
-    <div class="vtag" id="vTag">v77</div>
+    <div class="vtag" id="vTag">v79</div>
   </div>
 
   <div class="sheet" id="menuSheet" hidden>
@@ -3549,13 +3549,13 @@ function updateCamera(dt,now){
 }
 
 /* ===================== entrada ===================== */
-let ctrlMode='joy';try{const c=localStorage.getItem('laberinto-control');if(c==='pad')ctrlMode='pad'}catch(e){}
+var JF=.8;let ctrlMode='joy';try{const c=localStorage.getItem('laberinto-control');if(c==='pad')ctrlMode='pad'}catch(e){}
 let dragging=false;const ptrs=new Map();let joyId=null,joyO={x:0,y:0},joyIdle={x:90,y:600},JR=58,CS=.8;
 try{const c=parseFloat(localStorage.getItem('laberinto-escala3'));if(c>=.5&&c<=1.7)CS=c}catch(e){}
 function setCS(v){CS=v;JR=58*v;document.documentElement.style.setProperty('--cs',v);try{localStorage.setItem('laberinto-escala3',v)}catch(e){}placeJoy(false)}
 document.documentElement.style.setProperty('--cs',CS);JR=58*CS;
 const joyEl=$('joy'),knob=$('knob');
-function placeJoy(active,x,y){const h=app.clientHeight;joyIdle={x:26+70*CS,y:h-(48+70*CS)};const c=active?{x,y}:joyIdle;joyEl.style.left=(c.x-70*CS)+'px';joyEl.style.top=(c.y-70*CS)+'px';
+function placeJoy(active,x,y){const h=app.clientHeight;joyIdle={x:26+70*CS*JF,y:h-(48+70*CS*JF)};const c=active?{x,y}:joyIdle;joyEl.style.left=(c.x-70*CS*JF)+'px';joyEl.style.top=(c.y-70*CS*JF)+'px';
   joyEl.classList.toggle('active',!!active);if(!active)knob.style.transform=''}
 function applyCtrl(){$('joy').hidden=ctrlMode!=='joy';$('look').hidden=ctrlMode!=='joy';$('hud').classList.toggle('lk',ctrlMode==='joy');$('dpad').hidden=ctrlMode!=='pad';stick.x=stick.y=0;try{localStorage.setItem('laberinto-control',ctrlMode)}catch(e){}}
 const lookEl=$('look'),lknob=$('lknob');let lookId=null;const lookV={x:0,y:0};
@@ -3579,8 +3579,8 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('pointerdown',e=>{
   if(state!=='play'&&state!=='char')return;
   canvas.setPointerCapture(e.pointerId);const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
-  const zone=state==='play'&&ctrlMode==='joy'&&e.pointerType!=='mouse'&&x<r.width*.46&&y>r.height*.3&&joyId===null;
-  if(zone){joyId=e.pointerId;joyO={x:clamp(x,JR+10,r.width*.46),y:clamp(y,JR+10,r.height-JR-10)};placeJoy(true,joyO.x,joyO.y);stick.x=stick.y=0}
+  const zone=state==='play'&&ctrlMode==='joy'&&e.pointerType!=='mouse'&&Math.hypot(x-joyIdle.x,y-joyIdle.y)<JR*2.2&&joyId===null;
+  if(zone){joyId=e.pointerId;joyO={x:joyIdle.x,y:joyIdle.y};joyEl.classList.add('active');{const dx=x-joyO.x,dy=y-joyO.y,m=Math.hypot(dx,dy),k=m>JR?JR/m:1;knob.style.transform=`translate(${dx*k}px,${dy*k}px)`;stick.x=dx*k/JR;stick.y=-dy*k/JR}}
   else{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});dragging=true}});
 canvas.addEventListener('pointermove',e=>{
   if(e.pointerId===joyId){const r=canvas.getBoundingClientRect(),dx=e.clientX-r.left-joyO.x,dy=e.clientY-r.top-joyO.y,m=Math.hypot(dx,dy),k=m>JR?JR/m:1;
@@ -3623,7 +3623,7 @@ function bindSegs(){
   seg($('mCtrl'),[['joy','Joystick'],['pad','Cruceta']],()=>ctrlMode,v=>{ctrlMode=v;applyCtrl()});
   seg($('mCs'),[[.55,'Mini'],[.8,'Pequeño'],[1,'Normal'],[1.3,'Grande'],[1.6,'Enorme']],()=>CS,v=>setCS(v))}
 function toggleView(){firstPerson=!firstPerson;pitch=firstPerson?0:-.62;toast(firstPerson?'Primera persona':'Tercera persona');if(!firstPerson)camDist=desiredDist}
-let showMap=true;function toggleMap(){showMap=!showMap;$('mmWrap').hidden=!showMap;$('bMap').setAttribute('aria-pressed',showMap)}
+let showMap=true;function toggleMap(){showMap=!showMap;$('mmWrap').hidden=!showMap;$('bMap').setAttribute('aria-pressed',showMap);const s=$('bMapShow');if(s)s.hidden=showMap;try{localStorage.setItem('laberinto-mapa',showMap?'1':'0')}catch(e){}try{fitPill()}catch(e){}}
 function recenter(){camYaw=heading;pitch=firstPerson?0:-.62}
 function openMenu(){if(state!=='play')return;saveGame();state='menu';stick.x=stick.y=0;$('menuSheet').hidden=false;bindSegs()}
 function closeMenu(){$('menuSheet').hidden=true;if(state==='menu')state='play'}
@@ -5185,6 +5185,55 @@ function coasterRemote(r,R){const C=COAST;if(!C)return;const cart=C.rcart;
   R.root.position.set(r.x,r.y,r.z);R.root.quaternion.copy(r.cq);seatPose(R,false);
   if(r.lab)r.lab.position.set(r.x,r.y+.9,r.z)}
 setInterval(()=>{const C=COAST;if(!C||!C.rcart)return;let any=false;for(const r of remotes.values())if(r.rc)any=true;C.busy=any?1:0;if(!any)C.rcart.visible=false;if(!cst)C.cart.visible=!any},400);
+
+/* ---------- controles fijos y barra superior autoajustable ---------- */
+let CSU=CS;
+function fitPill(){const tl=document.querySelector('.hud .tl'),p=document.querySelector('.hud .pill');if(!tl||!p)return;
+  p.style.transform='';p.style.marginRight='';const W=app.clientWidth;if(!W||p.offsetWidth<2)return;
+  const mapW=16,left=parseFloat(getComputedStyle(tl).left)||16,avail=W-left-54-8-mapW,nat=p.offsetWidth;
+  if(nat>avail){const k=Math.max(.45,avail/nat);p.style.transformOrigin='0 50%';p.style.transform='scale('+k+')';p.style.marginRight=(-(nat*(1-k)))+'px'}}
+function fitHud(){try{const W=app.clientWidth,H=app.clientHeight;if(!W||!H)return;
+  const capW=(W-60)/342,capH=(H-300)/330,e=Math.max(.62,Math.min(CSU,capW,Math.max(.75,capH)));
+  if(Math.abs(e-CS)>.001){CS=e;document.documentElement.style.setProperty('--cs',e)}JR=58*CS*JF;placeJoy(false);fitPill()}catch(x){}}
+(function(){
+  document.documentElement.style.setProperty('--jf',JF);
+  const st=document.createElement('style');st.textContent=`
+.hud .look{right:26px;bottom:48px}
+.hud .lcol{left:calc(26px + 140px*var(--cs)*var(--jf) + 12px);bottom:48px;display:flex;flex-direction:column;gap:10px;transform:scale(var(--cs));transform-origin:0 100%}
+.hud:not(.lk) .lcol{left:calc(18px + 150px*var(--cs) + 12px);bottom:24px}
+.hud .lrow{left:26px;bottom:calc(48px + 140px*var(--cs)*var(--jf) + 12px);display:flex;gap:8px;transform:scale(var(--cs));transform-origin:0 100%}
+.hud:not(.lk) .lrow{left:18px;bottom:calc(24px + 150px*var(--cs) + 12px)}
+.hud.lk .br,.hud .br{right:26px;bottom:calc(48px + 140px*var(--cs)*var(--jf) + 12px);align-items:flex-end;gap:10px}
+.hud:not(.lk) .br{bottom:48px}
+@media (orientation:landscape){.hud.lk .br{right:26px;bottom:calc(48px + 140px*var(--cs)*var(--jf) + 12px)}}
+.hud .mcol{right:max(16px,env(safe-area-inset-right,0px));top:76px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
+.hud .mcol>*{pointer-events:auto}
+.hud .mcol .tr{position:static;pointer-events:none!important}
+.hud .mcol .tr .mm{pointer-events:auto;cursor:pointer}
+.gbtn.sm{width:44px;height:44px}.gbtn.sm svg{width:21px;height:21px}
+.hud .joy,.hud .look{width:calc(140px*var(--cs)*var(--jf));height:calc(140px*var(--cs)*var(--jf))}
+.hud .joy .knob,.hud .look .knob{width:calc(62px*var(--cs)*var(--jf));height:calc(62px*var(--cs)*var(--jf));margin:calc(-31px*var(--cs)*var(--jf)) 0 0 calc(-31px*var(--cs)*var(--jf))}
+.hud .mm{width:108px;height:108px}
+.hud #bGps{width:42px;height:42px}.hud #bGps svg{width:21px;height:21px}
+.hud .crow{display:flex;gap:8px;align-items:center}
+#bMapShow[hidden]{display:none}
+.talking .lcol,.talking .lrow,.talking .mcol{display:none!important}
+@media (max-height:520px){.hud .mcol{top:12px;flex-direction:row-reverse;align-items:flex-start}.hud .mcol .tr .mm{width:86px;height:86px}}
+.hud .tl{max-width:calc(100% - 16px)}
+.hud .pill{flex:0 0 auto;white-space:nowrap}
+`;document.head.appendChild(st);
+  const hud=$('hud'),br=document.querySelector('.hud .br'),row2=br.querySelector('.row2'),row3=br.querySelector('.row3');
+  const mk=c=>{const d=document.createElement('div');d.className=c;return d};
+  const lcol=mk('lcol');lcol.append($('bKick'),$('bJump'));hud.appendChild(lcol);
+  $('bMark').classList.add('sm');{const cr=mk('crow');cr.append($('bVoz'),$('bVozX'),$('bChat'));br.append($('bMark'),cr)}
+  const mcol=mk('mcol'),show=document.createElement('button');show.className='gbtn sm';show.id='bMapShow';show.setAttribute('aria-label','Mostrar el mapa');show.hidden=true;
+  show.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>';
+  mcol.append($('mmWrap'),show,$('bGps'));hud.appendChild(mcol);
+  $('bMap').hidden=true;row2.classList.add('lrow');hud.appendChild(row2);if(row3)row3.remove();
+  show.onclick=()=>toggleMap();$('mm').addEventListener('click',()=>toggleMap());
+  try{if(localStorage.getItem('laberinto-mapa')==='0'){showMap=true;toggleMap()}}catch(e){}
+  fitHud();addEventListener('resize',fitHud);addEventListener('orientationchange',()=>setTimeout(fitHud,250));setInterval(fitPill,900);
+})();
 
 const PEERCFG={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}};
 let rj=null;
