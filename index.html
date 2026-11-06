@@ -266,7 +266,7 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:
       <div class="opts2" id="fixRooms"><span class="fixl">Salas fijas</span><button class="chip" data-room="ROSA">ROSA</button><button class="chip" data-room="LILA">LILA</button><button class="chip" data-room="NUBE">NUBE</button><button class="chip" data-room="LUNA">LUNA</button></div>
     </div>
     <div class="opts2 foot"><button class="chip" id="bIntroRes">Resultados</button><button class="chip" id="bIntroChar">Personaje</button><button class="chip" id="bCharsOut">Guardar personajes</button><button class="chip" id="bCharsIn">Cargar personajes</button><button class="chip" id="bCloud">Guardar en GitHub</button></div>
-    <div class="vtag" id="vTag">v76</div>
+    <div class="vtag" id="vTag">v77</div>
   </div>
 
   <div class="sheet" id="menuSheet" hidden>
@@ -4922,6 +4922,7 @@ function pagesMerge(remote){const r=playersMerge(remote);if(r.chL)ghApply(r.out)
 /* ---------- chat de voz: WebRTC entre los jugadores de la sala; la señalización viaja por la propia sala ---------- */
 const VZ={on:false,mute:true,ptt:false,want:false,stream:null,pcs:new Map(),au:new Map(),an:new Map(),gn:new Map(),ac:null,talk:new Set(),busy:false,st:new Map(),blocked:false};
 const vzMe=()=>net?netId():null;
+const VA={on:false,rec:null,seq:0,t:0,mime:'',until:new Map(),err:'',got:0,sent:0};
 const vzIce=()=>{try{return PEERCFG.config.iceServers}catch(e){return [{urls:'stun:stun.l.google.com:19302'}]}};
 function vzSend(o){if(!net)return;o.t='vz';o.id=vzMe();try{netSend(o)}catch(e){}}
 function vzBtn(){const b=$('bVoz');if(!b)return;b.hidden=false;b.classList.toggle('on',VZ.on&&VZ.ptt);b.classList.toggle('mute',VZ.on&&!VZ.ptt);
@@ -4954,17 +4955,17 @@ async function vzApply(m){
   else if(m.k==='bye'){vzDrop(id)}}
 async function vzJoin(auto){
   if(!net||VZ.on||VZ.busy)return;
-  if(typeof RTCPeerConnection==='undefined'){toast('Este navegador no admite chat de voz');return}
+  if(typeof MediaRecorder==='undefined'){toast('Este navegador no puede grabar audio')}
   VZ.busy=true;vzAC();
   let listen=false;
   try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw 0;
     VZ.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false})}
-  catch(e){VZ.stream=null;listen=true}
+  catch(e){VZ.stream=null;listen=true;VA.err='mic'}
   VZ.busy=false;if(!net){if(VZ.stream)for(const t of VZ.stream.getTracks())t.stop();VZ.stream=null;return}
   VZ.on=true;VZ.want=true;VZ.ptt=false;VZ.mute=true;if(VZ.stream)for(const t of VZ.stream.getAudioTracks())t.enabled=false;
   if(VZ.stream)vzWatch('me',VZ.stream);
-  vzBtn();vzSend({k:'hi'});
-  toast(listen?'Sin micrófono: solo escuchas a los demás':auto?'Voz reconectada · mantén pulsado el botón para hablar':'Voz activada · mantén pulsado el botón para hablar')}
+  vzBtn();
+  toast(listen?'Sin acceso al micrófono: solo escuchas. Permítelo en el navegador (si juegas dentro del artefacto, abre el index.html por separado)':auto?'Voz reconectada · mantén pulsado el botón para hablar':'Voz activada · mantén pulsado el botón para hablar')}
 function vzStop(quiet){
   if(VZ.on&&net)vzSend({k:'bye'});
   for(const id of [...VZ.pcs.keys()])vzDrop(id);
@@ -4972,12 +4973,13 @@ function vzStop(quiet){
   const o=VZ.an.get('me');if(o){try{o.src.disconnect()}catch(x){}VZ.an.delete('me')}
   VZ.on=false;VZ.talk.clear();vzBtn();vzPill()}
 function vzLeave(){VZ.want=false;vzStop();toast('Has salido de la voz')}
-function vzTalk(on){if(!VZ.on)return;on=!!on&&!!VZ.stream;if(on===VZ.ptt)return;VZ.ptt=on;VZ.mute=!on;
+function vzTalk(on){if(!VZ.on)return;if(on&&!VZ.stream){if(!VZ.warned){VZ.warned=1;toast('No hay acceso al micrófono: permítelo en el navegador y vuelve a entrar a la voz')}return}on=!!on&&!!VZ.stream;if(on===VZ.ptt)return;VZ.ptt=on;VZ.mute=!on;
   if(VZ.stream)for(const t of VZ.stream.getAudioTracks())t.enabled=on;
+  if(on)vaStart();else vaStop();
   if(on){vzAC();for(const a of VZ.au.values())if(a.paused)a.play().catch(()=>{})}
   vzBtn();vzPill()}
 function vzPill(){let p=$('vzPill');if(!p){p=document.createElement('div');p.id='vzPill';p.hidden=true;document.body.appendChild(p)}
-  const nm=[];for(const id of VZ.talk){if(id==='me')continue;const r=remotes.get(id);nm.push(r?r.name:'Jugador')}
+  const nm=[];for(const id of new Set([...VZ.talk,...VA.until.keys()])){if(id==='me')continue;const r=remotes.get(id);nm.push(r?r.name:'Jugador')}
   const nameOf=id=>{const r=remotes.get(id);return r?r.name:'Jugador'};
   let t='',bad=false;
   if(VZ.ptt)t='Estás hablando…';
@@ -4991,7 +4993,7 @@ setInterval(()=>{if(!VZ.on){if(VZ.talk.size){VZ.talk.clear();vzPill()}return}
   let ch=false;for(const [id,o] of VZ.an){let on=vzLevel(o)>.06;if(id==='me')on=false;if(on!==VZ.talk.has(id)){on?VZ.talk.add(id):VZ.talk.delete(id);ch=true}}
   if(ch)vzPill()},180);
 setInterval(()=>{vzBtn();if(VZ.on)vzPill()},1500);
-addEventListener('pointerdown',()=>{if(VZ.on){vzAC();if(VZ.ac&&VZ.ac.state==='running'&&VZ.blocked){VZ.blocked=false;vzPill()}for(const a of VZ.au.values())if(a.paused)a.play().catch(()=>{})}},{passive:true});
+addEventListener('pointerdown',()=>{if(net)vzAC();if(VZ.on){vzAC();if(VZ.ac&&VZ.ac.state==='running'&&VZ.blocked){VZ.blocked=false;vzPill()}for(const a of VZ.au.values())if(a.paused)a.play().catch(()=>{})}},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)vzTalk(false)});
 (function(){const b=$('bVoz');if(!b)return;let held=false;
   const down=e=>{e.preventDefault();if(!net){toast('Entra en una sala online para usar el chat de voz');return}held=true;try{b.setPointerCapture(e.pointerId)}catch(x){}
@@ -5001,6 +5003,29 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)vzTalk(fals
   b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);
   b.addEventListener('contextmenu',e=>e.preventDefault());
   const x=$('bVozX');if(x)x.addEventListener('click',()=>{if(VZ.on)vzLeave()});vzBtn()})();
+
+/* ---- voz por la sala (sin WebRTC): se graba mientras se mantiene pulsado y se envía en trozos de ~1,3 s por la misma conexión que el juego ---- */
+function vaMime(){if(typeof MediaRecorder==='undefined')return '';for(const m of ['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus']){try{if(MediaRecorder.isTypeSupported(m))return m}catch(e){}}return ''}
+function vaStart(){if(!VZ.stream||typeof MediaRecorder==='undefined')return;if(!VA.mime)VA.mime=vaMime();VA.on=true;vaSeg()}
+function vaSeg(){if(!VA.on||!VZ.stream)return;let r;
+  try{r=new MediaRecorder(VZ.stream,VA.mime?{mimeType:VA.mime,audioBitsPerSecond:24000}:{})}catch(e){try{r=new MediaRecorder(VZ.stream)}catch(x){VA.on=false;toast('No se puede grabar audio en este navegador');return}}
+  VA.rec=r;const parts=[];r.ondataavailable=e=>{if(e.data&&e.data.size)parts.push(e.data)};
+  r.onstop=async()=>{if(!parts.length||!net)return;try{const b=new Blob(parts,{type:r.mimeType||VA.mime||'audio/webm'});if(b.size<300)return;
+    const u=new Uint8Array(await b.arrayBuffer());let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));
+    netSend({t:'va',id:vzMe(),n:++VA.seq,m:(r.mimeType||VA.mime||'audio/webm').split(';')[0],d:btoa(s)});VA.sent++}catch(e){console.warn('va send',e)}};
+  try{r.start()}catch(e){VA.on=false;return}
+  VA.t=setTimeout(()=>{if(VA.on&&VA.rec===r){try{r.stop()}catch(e){}vaSeg()}},1300)}
+function vaStop(){VA.on=false;clearTimeout(VA.t);const r=VA.rec;VA.rec=null;if(r&&r.state!=='inactive'){try{r.stop()}catch(e){}}}
+async function vaPlay(m){
+  if(!net||!m||!m.d||m.id===vzMe())return;const id=m.id;vzAC();if(!VZ.ac)return;
+  if(VZ.ac.state!=='running'){VZ.blocked=true;try{await VZ.ac.resume()}catch(e){}if(VZ.ac.state!=='running'){vzPill();return}else VZ.blocked=false}
+  try{const bin=atob(m.d),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    const ab=await new Promise((res,rej)=>{const p=VZ.ac.decodeAudioData(u.buffer,res,rej);if(p&&p.then)p.then(res,rej)});
+    const src=VZ.ac.createBufferSource(),g=VZ.ac.createGain();src.buffer=ab;g.gain.value=1.7;src.connect(g);g.connect(VZ.ac.destination);
+    const now=VZ.ac.currentTime;VA.nx=VA.nx||new Map();const t0=Math.max(VA.nx.get(id)||0,now+.12);src.start(t0);VA.nx.set(id,t0+ab.duration);VA.got++;
+    VA.until.set(id,performance.now()+(t0-now+ab.duration)*1000+250);vzPill()}
+  catch(e){VA.err='dec';console.warn('va play',e);const r=remotes.get(id);const p=$('vzPill');if(p){p.hidden=false;p.classList.add('bad');p.textContent='No se pudo reproducir la voz de '+(r?r.name:'otro jugador')+' (formato no compatible)'}}}
+setInterval(()=>{if(!VA.until.size)return;const n=performance.now();let ch=false;for(const [k,v] of [...VA.until])if(v<n){VA.until.delete(k);ch=true}if(ch)vzPill()},200);
 
 /* ---------- montaña rusa con looping: recorre los dos lóbulos del circuito ---------- */
 var COAST,cst;
@@ -5192,6 +5217,7 @@ function netApply(m){
   else if(m.t==='hs'){startHide(m.seed,true)}
   else if(m.t==='hf'){if(hs&&hs.list[m.i])hideFind(hs.list[m.i],true)}
   else if(m.t==='vz'){try{vzApply(m)}catch(e){console.warn('vz',e)}}
+  else if(m.t==='va'){try{vaPlay(m)}catch(e){console.warn('va',e)}}
   else if(m.t==='chat'){chatRecv(m)}
   else if(m.t==='win'){toast('¡'+m.name+' ha llegado a la estrella!')}}
 function netStep(dt,now){
